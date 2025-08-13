@@ -138,6 +138,7 @@ function generarEnlaceWhatsapp() {
 document.addEventListener("DOMContentLoaded", () => {
     cargarCarrito();
 
+
     // Lógica del Modal del Carrito
     const modalCarrito = document.getElementById("modalCarrito");
     if (modalCarrito) {
@@ -154,6 +155,20 @@ document.addEventListener("DOMContentLoaded", () => {
             seccionContacto.classList.toggle("hidden");
         });
     }
+
+    // --- Lógica del Modal de Login ---
+const modalLogin = document.getElementById("modalLogin");
+if (modalLogin) {
+    document.getElementById("abrirLogin").addEventListener("click", () => modalLogin.classList.remove("hidden"));
+    document.getElementById("cerrarLogin").addEventListener("click", () => modalLogin.classList.add("hidden"));
+
+    // Comprobamos si la URL tiene un error de login para mostrar el modal automáticamente
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('login_error')) {
+        modalLogin.classList.remove('hidden');
+        document.getElementById('loginError').classList.remove('hidden');
+    }
+}
 
     // Lógica de Envío del Formulario de Contacto
     const formContacto = document.querySelector("#contacto form");

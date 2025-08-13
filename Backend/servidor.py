@@ -9,6 +9,9 @@ from dotenv import load_dotenv
 import pyodbc
 from werkzeug.security import check_password_hash # Para verificar la contraseña
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required # La nueva librería
+from flask import abort
+from functools import wraps
+from flask_login import current_user
 
 load_dotenv()
 
@@ -35,6 +38,30 @@ DB_CONNECTION_STRING = os.getenv("DATABASE_CONNECTION_STRING")
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login' # Si un usuario no logeado intenta acceder a una página protegida, lo redirige aquí
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # Si el usuario no está logeado, Flask-Login lo maneja como siempre
+        if not current_user.is_authenticated:
+            return login_manager.unauthorized()
+
+        # Si está logeado, verificamos su rol en la base de datos
+        conn = pyodbc.connect(DB_CONNECTION_STRING)
+        cursor = conn.cursor()
+        # Buscamos si el usuario actual tiene el rol 'admin' (RolID = 1)
+        sql_query = "SELECT 1 FROM UsuarioRoles WHERE UsuarioID = ? AND RolID = 1"
+        cursor.execute(sql_query, current_user.id)
+        is_admin = cursor.fetchone()
+        conn.close()
+
+        # Si la consulta no devuelve nada, el usuario no es admin
+        if not is_admin:
+            abort(403)  # Error "Forbidden": no tienes permiso para ver esto
+
+        # Si es admin, le dejamos pasar a la ruta original
+        return f(*args, **kwargs)
+    return decorated_function
 
 # Creo una clase 'User' que Flask-Login puede entender
 class User(UserMixin):
@@ -124,10 +151,19 @@ def login():
         user = User(id=user_data.UsuarioID, email=user_data.Email, nombre=user_data.Nombre)
         login_user(user)
         # Si el login es exitoso, redirigimos al futuro panel de admin (por ahora a la home)
-        return redirect(url_for('obtener_productos')) 
+        return redirect(url_for('admin_dashboard')) 
     else:
         # Si el login falla, redirigimos a la página anterior con un parámetro de error
         return redirect(f"{next_url}?login_error=1")
+
+
+    # --- RUTA PROTEGIDA PARA EL PANEL DE ADMINISTRACIÓN ---
+@app.route('/admin/dashboard')
+@admin_required  # Solo usuarios logeados como admin pueden ver esta página.
+def admin_dashboard():
+    # Pasamos el nombre del usuario actual a la plantilla
+    return render_template('admin_dashboard.html', nombre_usuario=current_user.nombre)
+
 
 # --- RUTA PARA ACTUALIZAR STOCK (MODIFICADA) ---
 @app.route("/api/actualizar-stock", methods=["POST"])
