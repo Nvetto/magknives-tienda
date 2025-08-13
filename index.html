@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Magknives</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles/style.css">
+</head>
+<nav class="bg-green-900 text-white p-1 text-center">
+   <p>Hacemos envios a todo el pais</p>
+  </nav>
+
+<body class="bg-gray-300">
+  <!-- Header -->
+  <header class="bg-black text-white p-4 flex justify-between items-center">
+    <img src="Imagenes/Logo.jpg" alt="Logo" class="h-10">
+    <div class="relative w-full max-w-xl mx-auto mb-2 md:mb-0">
+      <input type="text" id="barraBusqueda" placeholder="¿Qué estás buscando? Buscá por nombre, material o tipo de cuchillo" class="p-2 rounded w-full text-black">
+      <div id="sinResultados" class="hidden absolute top-full left-0 mt-2 w-full bg-white text-gray-700 text-sm p-2 rounded shadow z-10">
+        No se encontraron productos que coincidan con tu búsqueda.
+      </div>
+    </div>
+    <div class="space-x-4">
+      <button id="abrirCarrito" class="relative px-3 py-2">
+      <span>Mi carrito</span>
+      <span id="contadorCarrito" class="absolute -top-2 -right-2 bg-yellow-500 text-black text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">
+      </span>
+    </button>
+    </div>
+  </header>
+
+  <!-- Navegación -->
+  <nav class="bg-gray-900 text-white p-3 text-center">
+    <a href="#" id="btnInicio" class="mx-2 font-bold text-yellow-400">Inicio</a>
+    <a href="catalogo.html" class="mx-2">Catalogo</a>
+    <a href="#" id="btnContacto" class="mx-2">Contacto</a>
+    <a href="personalizar.html" class="mx-2">Diseña tu pieza personalizada</a>
+  </nav>
+
+  <!-- Sección de contacto -->
+  <section id="contacto" class="hidden mt-16 bg-white p-8 rounded shadow-lg max-w-2xl mx-auto">
+    <h2 class="text-2xl font-bold mb-4">Contacto</h2>
+    <form class="space-y-4">
+      <div>
+        <label for="nombre" class="block text-sm font-medium">Nombre</label>
+        <input type="text" id="nombre" class="w-full p-2 border border-gray-300 rounded" required>
+      </div>
+      <div>
+        <label for="email" class="block text-sm font-medium">Email</label>
+        <input type="email" id="email" class="w-full p-2 border border-gray-300 rounded" required>
+      </div>
+      <div>
+        <label for="mensaje" class="block text-sm font-medium">Mensaje</label>
+        <textarea id="mensaje" rows="4" class="w-full p-2 border border-gray-300 rounded" required></textarea>
+      </div>
+      <button type="submit" class="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800">Enviar</button>
+    </form>
+  </section>
+
+  
+
+  <!-- Modal Carrito -->
+  <div id="modalCarrito" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white p-6 rounded shadow-lg w-full max-w-md">
+      <h2 class="text-xl font-bold mb-4">Mi carrito</h2>
+      <ul id="listaCarrito" class="mb-4"></ul>
+      <p class="font-bold mb-4">Total: $<span id="totalCarrito">0</span></p>
+      <div class="flex justify-between items-center mt-6">
+  <button id="cerrarCarrito" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Cerrar</button>
+  <a href="#" id="btnFinalizarWhatsapp" target="_blank" class="bg-green-500 text-white px-4 py-2 rounded font-bold hover:bg-green-600 transition-colors hidden">
+    Finalizar por WhatsApp
+  </a>
+</div>
+    </div>
+  </div>
+
+  <!-- Mensaje de agregado al carrito -->
+  <div id="mensajeAgregado" class="hidden fixed top-8 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded shadow-lg z-50">
+    ¡Agregado con éxito!
+  </div>
+    <!-- Mensaje de sin stock -->
+  <div id="mensajeSinStock" class="hidden fixed top-32 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-6 py-3 rounded shadow-lg z-50">
+    No hay suficiente stock disponible.
+  </div>
+  
+  <!-- Mensaje de éxito para contacto -->
+  <div id="mensajeContacto" class="hidden fixed top-20 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded shadow-lg z-50">
+    ¡Mensaje enviado con éxito!
+  </div>
+
+    <main 
+  class="container mx-auto px-4" id="disponiblesCompleto">
+</main>
+
+<a href="https://wa.me/5493329577462" target="_blank" 
+   class="js-btn-fixed-bottom btn-whatsapp btn-floating fixed-bottom visible-when-content-ready" 
+   aria-label="Comunicate por WhatsApp Mag Knives" style="margin-bottom: 50px;">
+            <svg baseProfile="tiny" xmlns="http://www.w3.org/2000/svg" viewBox="300 -476.1 1792 1792">
+              <path d="M1413 497.9c8.7 0 41.2 14.7 97.5 44s86.2 47 89.5 53c1.3 3.3 2 8.3 2 15 0 22-5.7 47.3-17 76-10.7 26-34.3 47.8-71 65.5s-70.7 26.5-102 26.5c-38 0-101.3-20.7-190-62-65.3-30-122-69.3-170-118s-97.3-110.3-148-185c-48-71.3-71.7-136-71-194v-8c2-60.7 26.7-113.3 74-158 16-14.7 33.3-22 52-22 4 0 10 .5 18 1.5s14.3 1.5 19 1.5c12.7 0 21.5 2.2 26.5 6.5s10.2 13.5 15.5 27.5c5.3 13.3 16.3 42.7 33 88s25 70.3 25 75c0 14-11.5 33.2-34.5 57.5s-34.5 39.8-34.5 46.5c0 4.7 1.7 9.7 5 15 22.7 48.7 56.7 94.3 102 137 37.3 35.3 87.7 69 151 101a44 44 0 0 0 22 7c10 0 28-16.2 54-48.5s43.3-48.5 52-48.5zm-203 530c84.7 0 165.8-16.7 243.5-50s144.5-78 200.5-134 100.7-122.8 134-200.5 50-158.8 50-243.5-16.7-165.8-50-243.5-78-144.5-134-200.5-122.8-100.7-200.5-134-158.8-50-243.5-50-165.8 16.7-243.5 50-144.5 78-200.5 134S665.3 78.7 632 156.4s-50 158.8-50 243.5a611 611 0 0 0 120 368l-79 233 242-77a615 615 0 0 0 345 104zm0-1382c102 0 199.5 20 292.5 60s173.2 93.7 240.5 161 121 147.5 161 240.5 60 190.5 60 292.5-20 199.5-60 292.5-93.7 173.2-161 240.5-147.5 121-240.5 161-190.5 60-292.5 60a742 742 0 0 1-365-94l-417 134 136-405a736 736 0 0 1-108-389c0-102 20-199.5 60-292.5s93.7-173.2 161-240.5 147.5-121 240.5-161 190.5-60 292.5-60z"></path>
+            </svg>
+  </a>
+
+  <!-- Footer -->
+  <footer class="bg-black text-white p-4 text-center">
+    &copy; 2025 Tienda de Cuchillos Mags Knives. Todos los derechos reservados.
+  </footer>
+  <script  src="js/common.js"></script>
+  <script  src="js/index.js"></script>
+</body>
+</html>
+
+

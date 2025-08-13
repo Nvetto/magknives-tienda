@@ -1,0 +1,166 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .slider-box img {
+        width: 400px;
+        height: 400px;
+        aspect-ratio: 16/9;
+        object-fit: contain;
+
+    }
+    
+.producto {
+  height: 100%;
+}
+
+.grid-productos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  align-items: stretch; /* ¡Esto es clave! */
+}
+    body {
+        background-color: #f5f5f5;
+        }
+    
+    .titulo {
+        text-align: center;
+        font-size: 40px;
+        padding-top: 50px;
+    }
+
+    .slider-box {
+        width: 100%;
+        height: auto;
+        margin: 0 auto 0;
+        overflow: hidden;
+    }
+
+    .slider-box ul {
+        display: flex;
+        padding: 0;
+        width: 400%;
+        animation: slide 8s infinite alternate ease-in-out;
+    }
+
+    .slider-box li {
+        width: 100%;
+        list-style: none;
+        position: relative;
+    }
+
+    .texto {
+        position: absolute;
+        text-align: center;
+        padding: 0 250px;
+        top: 250px;
+        color:#ffffff;
+    }
+
+    .texto h2 {
+        font-size: 45px;
+        margin-bottom: 35px;
+    }
+
+    .sliter-box img {
+        width: 100%;
+    }
+
+    @keyframes slide {
+        0% {margin-left: 0%; }
+        20% { margin-left:0%; }
+        25% {margin-left: -100%; }
+        45% {margin-left: -100%; }
+        50% {margin-left: -200%; }
+        70% { margin-left: -200%; }
+        75% { margin-left: -300%; }
+        100% {margin-left: -300%; }
+    }
+
+    @media (max-width: 991px) {
+
+        body{
+            padding: 30px ;
+        }
+
+        .slider-box {
+            width: 100%;
+        }
+
+        .texto {
+            padding: 0 20px;
+            top: 150px;
+        }
+
+        .texto h2 {
+            font-size: 25px;
+            margin-bottom: 20px;
+        }
+    }
+
+    .btn-whatsapp {
+    position: fixed; /* Mantiene el botón en la misma posición al desplazarse */
+    bottom: 20px; /* Distancia desde la parte inferior de la ventana */
+    right: 20px; /* Distancia desde el lado derecho de la ventana */
+    width: 60px; /* Ancho del botón */
+    height: 60px; /* Alto del botón para hacerlo cuadrado */
+    background-color: #25d366; /* Color de fondo de WhatsApp */
+    color: #FFF; /* Color del ícono */
+    border-radius: 50%; /* Hace que el botón sea circular */
+    text-align: center; /* Centra el contenido */
+    box-shadow: 2px 2px 3px #999; /* Agrega una sombra para un efecto flotante */
+    z-index: 1000; /* Asegura que el botón esté siempre por encima de otros elementos */
+    display: flex; /* Utiliza flexbox para centrar el SVG */
+    align-items: center; /* Alinea verticalmente el ícono */
+    justify-content: center; /* Alinea horizontalmente el ícono */
+    transition: transform 0.3s ease-in-out; /* Suaviza la animación del hover */
+}
+
+.btn-whatsapp:hover {
+    transform: scale(1.1); /* Agranda el botón ligeramente al pasar el mouse */
+}
+
+.btn-whatsapp svg {
+    width: 30px; /* Ancho del SVG del ícono */
+    height: 30px; /* Alto del SVG del ícono */
+    fill: currentColor; /* Usa el color del texto para el SVG */
+}
+
+@media (max-width: 768px) {
+    .btn-whatsapp {
+        bottom: 15px; /* Ajusta la posición en dispositivos móviles */
+        right: 15px; /* Ajusta la posición en dispositivos móviles */
+        width: 50px; /* Reduce el tamaño en dispositivos móviles */
+        height: 50px; /* Reduce el tamaño en dispositivos móviles */
+    }
+}
+
+/* --- Estilos para el banner de "Sin Stock" --- */
+
+/* Hacemos que el contenedor del producto sea el punto de referencia 
+   para posicionar el banner y ocultamos cualquier desborde. */
+.producto {
+    position: relative;
+    overflow: hidden;
+}
+
+/* Estilo de la cinta/banner */
+.sin-stock-banner {
+    position: absolute;
+    top: 12px;
+    right: -45px; /* Lo movemos hacia afuera para que la rotación lo coloque en la esquina */
+    background-color: #b91c1c; /* Un rojo oscuro (red-800 de Tailwind) */
+    color: white;
+    padding: 5px 40px; /* El padding horizontal ancho crea la longitud de la cinta */
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-align: center;
+    transform: rotate(45deg); /* La rotación clave para el efecto diagonal */
+    z-index: 10; /* Asegura que esté por encima de la imagen */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Sombra sutil */
+}

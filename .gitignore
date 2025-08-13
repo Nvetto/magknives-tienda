@@ -1,0 +1,5 @@
+# Archivo de variables de entorno
+.env
+
+# Carpetas de caché de Python
+__pycache__/
