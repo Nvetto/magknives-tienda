@@ -9,3 +9,4 @@ __pycache__/
 *.ldf
 *.db
 *.sqlite3
+*.sql
