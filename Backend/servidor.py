@@ -94,7 +94,7 @@ def load_user(user_id):
         return User(id=user_data.UsuarioID, email=user_data.Email, nombre=user_data.Nombre)
     return None
 
-# --- RUTA PARA OBTENER PRODUCTOS (MODIFICADA) ---
+# --- RUTA PARA OBTENER PRODUCTOS ---
 @app.route("/api/productos", methods=["GET"])
 def obtener_productos():
     productos_dict = {} # Usaremos un diccionario para agrupar las imágenes por producto
@@ -144,7 +144,7 @@ def obtener_productos():
     return jsonify(lista_productos)
 
 
-# --- NUEVA RUTA PARA CERRAR SESIÓN ---
+# --- RUTA PARA CERRAR SESIÓN ---
 @app.route('/logout')
 @login_required # Solo un usuario logueado puede cerrar sesión
 def logout():
@@ -152,7 +152,7 @@ def logout():
     return jsonify({"success": True, "message": "Sesión cerrada correctamente."})
 
 
-# --- NUEVAS RUTAS PARA AUTENTICACIÓN ---
+# --- RUTAS PARA AUTENTICACIÓN ---
 @app.route('/login', methods=['POST'])
 def login():
     email = request.form.get('email')
@@ -179,7 +179,6 @@ def login():
 @app.route('/admin/dashboard')
 @admin_required  # Solo usuarios logeados como admin pueden ver esta página.
 def admin_dashboard():
-    # Pasamos el nombre del usuario actual a la plantilla
     return render_template('admin_dashboard.html', nombre_usuario=current_user.nombre)
 
 
@@ -214,7 +213,7 @@ def auth_status():
     # Si no hay nadie logeado
     return jsonify({"is_authenticated": False})
 
-# --- RUTA PARA ACTUALIZAR STOCK (MODIFICADA) ---
+# --- RUTA PARA ACTUALIZAR STOCK ---
 @app.route("/api/actualizar-stock", methods=["POST"])
 def actualizar_stock_ruta():
     carrito = request.get_json()
@@ -227,7 +226,6 @@ def actualizar_stock_ruta():
         
         for item_carrito in carrito:
             # Llamamos al stored procedure para actualizar el stock de forma segura
-            # O ejecutamos una consulta directa con validación
             sql = "{CALL usp_ActualizarStockPorVenta (?, ?)}"
             params = (item_carrito['nombre'], item_carrito['cantidad'])
             # Nota: El Stored Procedure debe buscar el producto por nombre y validar el stock
@@ -244,7 +242,7 @@ def actualizar_stock_ruta():
             conn.close()
 
 
-# --- RUTA DE CONTACTO (SIN CAMBIOS) ---
+# --- RUTA DE CONTACTO  ---
 @app.route("/contacto", methods=["POST", "OPTIONS"])
 def contacto():
     if request.method == "OPTIONS":

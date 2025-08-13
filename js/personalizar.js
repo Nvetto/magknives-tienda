@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- INICIO: NUEVA LÓGICA PARA PRECARGAR EL FORMULARIO ---
+    // --- INICIO: LÓGICA PARA PRECARGAR EL FORMULARIO ---
     try {
         const params = new URLSearchParams(window.location.search);
         

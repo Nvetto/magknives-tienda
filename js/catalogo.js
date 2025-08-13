@@ -79,7 +79,6 @@ function renderizarCatalogo(productos) {
         grid.className = 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4';
 
         productosPorCategoria[categoria].forEach(prod => {
-            // --- CAMBIO 1: El div principal ya no es un contenedor flex ---
             const productoDiv = document.createElement('div');
             productoDiv.className = 'producto bg-white shadow-lg rounded p-4';
 
@@ -89,7 +88,7 @@ function renderizarCatalogo(productos) {
 
             const carruselHTML = prod.imagenes.map(imgSrc => `<li><img src="${imgSrc}" alt="${prod.nombre}"></li>`).join('');
 
-            // --- CAMBIO 2: La estructura interior ahora contiene el layout flex ---
+            // La estructura interior contiene el layout flex ---
             productoDiv.innerHTML = `
                 ${prod.stock === 0 ? '<div class="sin-stock-banner">Sin Stock</div>' : ''}
                 <div class="h-full flex flex-col justify-between">

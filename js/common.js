@@ -84,7 +84,7 @@ function actualizarCarrito() {
     const lista = document.getElementById("listaCarrito");
     const total = document.getElementById("totalCarrito");
     const btnWhatsapp = document.getElementById("btnFinalizarWhatsapp");
-    const contadorCarrito = document.getElementById("contadorCarrito"); // <-- 1. Obtenemos el nuevo contador
+    const contadorCarrito = document.getElementById("contadorCarrito"); 
 
     if (!lista || !total) return;
 
@@ -180,8 +180,6 @@ document.addEventListener("DOMContentLoaded", () => {
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    // Si el logout fue exitoso, recargamos la página.
-                    // Al recargar, actualizarEstadoHeader() mostrará el botón de "Login"
                     location.reload();
                 }
             })
@@ -224,7 +222,7 @@ if (modalLogin) {
 const formLogin = document.querySelector('#modalLogin form');
 if (formLogin) {
     formLogin.addEventListener('submit', (e) => {
-        e.preventDefault(); // ¡Muy importante! Evita que la página se recargue.
+        e.preventDefault(); // Evita que la página se recargue.
 
         const btnSubmit = formLogin.querySelector('button[type="submit"]');
         const errorDiv = document.getElementById('loginError');
@@ -242,7 +240,6 @@ if (formLogin) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Si el login es exitoso...
                 document.getElementById('modalLogin').classList.add('hidden'); // Cerramos el modal
                 actualizarEstadoHeader(); // Actualizamos la cabecera para mostrar "Panel Admin"
             } else {
@@ -307,7 +304,6 @@ if (formLogin) {
         btnFinalizar.addEventListener('click', (e) => {
             e.preventDefault();
             if (carrito.length > 0) {
-                // ... (toda la lógica del fetch para actualizar stock)
                 fetch('http://127.0.0.1:5000/api/actualizar-stock', {
                     method: 'POST',
                     credentials: 'include',

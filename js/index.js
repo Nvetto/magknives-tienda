@@ -53,7 +53,7 @@ function renderizarDisponibles(productos) {
     const contenedorPrincipal = document.getElementById("disponiblesCompleto");
     if (!contenedorPrincipal) return;
 
-    // Lógica para completar hasta 8 productos (sin cambios)
+    // Lógica para completar hasta 8 productos
     let productosAMostrar;
     const productosEnStock = productos.filter(prod => prod.stock > 0);
     productosAMostrar = [...productosEnStock];
@@ -79,9 +79,8 @@ function renderizarDisponibles(productos) {
     grid.className = 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4';
 
     productosAMostrar.forEach(prod => {
-        // --- CAMBIO 1: El div principal ya no es un contenedor flex ---
         const productoDiv = document.createElement('div');
-        productoDiv.className = 'producto bg-white shadow-lg rounded p-4'; // Se quitó flex, flex-col, etc.
+        productoDiv.className = 'producto bg-white shadow-lg rounded p-4';
 
         const botonHTML = prod.stock > 0
             ? `<button data-nombre-producto="${prod.nombre}" class="add-to-cart-btn bg-blue-600 text-white px-3 py-2 rounded mt-4 hover:bg-blue-700 w-full">Agregar al carrito</button>`
@@ -89,7 +88,7 @@ function renderizarDisponibles(productos) {
 
         const carruselHTML = prod.imagenes.map(imgSrc => `<li><img src="${imgSrc}" alt="${prod.nombre}"></li>`).join('');
 
-        // --- CAMBIO 2: La estructura interior ahora contiene el layout flex ---
+        // --- La estructura interior  contiene el layout flex ---
         productoDiv.innerHTML = `
             ${prod.stock === 0 ? '<div class="sin-stock-banner">Sin Stock</div>' : ''}
             <div class="h-full flex flex-col justify-between">
