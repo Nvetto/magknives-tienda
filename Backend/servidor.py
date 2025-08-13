@@ -19,10 +19,22 @@ app = Flask(__name__, template_folder='../templates')
 
 app.secret_key = os.getenv("SECRET_KEY")
 
+@app.after_request
+def add_header(response):
+    """
+    Añade cabeceras para prevenir que el navegador guarde en caché las respuestas de la API.
+    """
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '-1'
+    return response
+
 # Configuración de CORS
 CORS(app, resources={
+     r"/login": {"origins": "http://127.0.0.1:5500"},
+    r"/logout": {"origins": "http://127.0.0.1:5500","supports_credentials": True}, 
     r"/contacto": {"origins": "http://127.0.0.1:5500"},
-    r"/api/*": {"origins": "http://127.0.0.1:5500"}
+    r"/api/*": {"origins": "http://127.0.0.1:5500", "supports_credentials": True}
 })
 
 # Obtenemos las variables de entorno
@@ -132,14 +144,19 @@ def obtener_productos():
     return jsonify(lista_productos)
 
 
+# --- NUEVA RUTA PARA CERRAR SESIÓN ---
+@app.route('/logout')
+@login_required # Solo un usuario logueado puede cerrar sesión
+def logout():
+    logout_user() # Esta función de Flask-Login limpia la sesión del usuario
+    return jsonify({"success": True, "message": "Sesión cerrada correctamente."})
+
+
 # --- NUEVAS RUTAS PARA AUTENTICACIÓN ---
-@app.route('/login', methods=['POST']) # Solo acepta POST, ya no muestra una página
+@app.route('/login', methods=['POST'])
 def login():
     email = request.form.get('email')
     password = request.form.get('password')
-    
-    # Obtenemos la URL de la que vino el usuario para poder redirigirlo allí
-    next_url = request.referrer or url_for('obtener_productos')
 
     conn = pyodbc.connect(DB_CONNECTION_STRING)
     cursor = conn.cursor()
@@ -148,13 +165,14 @@ def login():
     conn.close()
 
     if user_data and check_password_hash(user_data.HashContrasena, password):
+        # Si las credenciales son correctas, creamos el usuario y la sesión
         user = User(id=user_data.UsuarioID, email=user_data.Email, nombre=user_data.Nombre)
         login_user(user)
-        # Si el login es exitoso, redirigimos al futuro panel de admin (por ahora a la home)
-        return redirect(url_for('admin_dashboard')) 
+        # Devolvemos una respuesta de éxito en JSON
+        return jsonify({"success": True, "nombre": user.nombre})
     else:
-        # Si el login falla, redirigimos a la página anterior con un parámetro de error
-        return redirect(f"{next_url}?login_error=1")
+        # Si las credenciales son incorrectas, devolvemos un error en JSON
+        return jsonify({"success": False, "error": "Email o contraseña incorrectos"})
 
 
     # --- RUTA PROTEGIDA PARA EL PANEL DE ADMINISTRACIÓN ---

@@ -57,7 +57,7 @@ function actualizarEstadoHeader() {
     const btnCerrarSesion = document.getElementById('btnCerrarSesion');
 
     // Hacemos la petición a nuestro nuevo endpoint
-    fetch('http://127.0.0.1:5000/api/auth/status')
+    fetch('http://127.0.0.1:5000/api/auth/status', {credentials: 'include',cache: 'no-cache'})
         .then(response => response.json())
         .then(data => {
             if (data.is_authenticated) {
@@ -168,6 +168,26 @@ document.addEventListener("DOMContentLoaded", () => {
     actualizarEstadoHeader();
     cargarCarrito();
 
+     // --- LÓGICA PARA CERRAR SESIÓN ---
+    const btnCerrarSesion = document.getElementById('btnCerrarSesion');
+    if (btnCerrarSesion) {
+        btnCerrarSesion.addEventListener('click', (e) => {
+            e.preventDefault(); // Evita que el enlace navegue
+
+            fetch('http://127.0.0.1:5000/logout', {
+                credentials: 'include' // ¡Muy importante para que envíe la cookie de sesión!
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Si el logout fue exitoso, recargamos la página.
+                    // Al recargar, actualizarEstadoHeader() mostrará el botón de "Login"
+                    location.reload();
+                }
+            })
+            .catch(error => console.error('Error al cerrar sesión:', error));
+        });
+    }
 
     // Lógica del Modal del Carrito
     const modalCarrito = document.getElementById("modalCarrito");
@@ -200,6 +220,50 @@ if (modalLogin) {
     }
 }
 
+// --- Lógica de envío del formulario de login con JavaScript (AJAX) ---
+const formLogin = document.querySelector('#modalLogin form');
+if (formLogin) {
+    formLogin.addEventListener('submit', (e) => {
+        e.preventDefault(); // ¡Muy importante! Evita que la página se recargue.
+
+        const btnSubmit = formLogin.querySelector('button[type="submit"]');
+        const errorDiv = document.getElementById('loginError');
+        const formData = new FormData(formLogin);
+
+        btnSubmit.innerText = 'Verificando...';
+        btnSubmit.disabled = true;
+        errorDiv.classList.add('hidden'); // Ocultamos errores previos
+
+        fetch('http://127.0.0.1:5000/login', {
+            method: 'POST',
+            body: formData,
+            credentials: 'include' // Muy importante para enviar cookies
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Si el login es exitoso...
+                document.getElementById('modalLogin').classList.add('hidden'); // Cerramos el modal
+                actualizarEstadoHeader(); // Actualizamos la cabecera para mostrar "Panel Admin"
+            } else {
+                // Si el login falla...
+                errorDiv.innerText = data.error;
+                errorDiv.classList.remove('hidden'); // Mostramos el mensaje de error
+            }
+        })
+        .catch(error => {
+            console.error('Error en el login:', error);
+            errorDiv.innerText = 'No se pudo conectar con el servidor.';
+            errorDiv.classList.remove('hidden');
+        })
+        .finally(() => {
+            // Reactivamos el botón
+            btnSubmit.innerText = 'Iniciar Sesión';
+            btnSubmit.disabled = false;
+        });
+    });
+}
+
     // Lógica de Envío del Formulario de Contacto
     const formContacto = document.querySelector("#contacto form");
     if (formContacto) {
@@ -211,6 +275,7 @@ if (modalLogin) {
 
             fetch('http://127.0.0.1:5000/contacto', {
                 method: 'POST',
+                credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     nombre: document.getElementById("nombre").value,
@@ -245,6 +310,7 @@ if (modalLogin) {
                 // ... (toda la lógica del fetch para actualizar stock)
                 fetch('http://127.0.0.1:5000/api/actualizar-stock', {
                     method: 'POST',
+                    credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(carrito)
                 })
