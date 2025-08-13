@@ -3,3 +3,9 @@
 
 # Carpetas de caché de Python
 __pycache__/
+
+# Archivos de Base de Datos Local
+*.mdf
+*.ldf
+*.db
+*.sqlite3
