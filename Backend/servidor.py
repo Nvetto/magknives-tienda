@@ -1,72 +1,165 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-import json
 import os
 import smtplib
 from email.mime.text import MIMEText
 from email.header import Header
 from email.utils import formataddr
-from dotenv import load_dotenv 
+from flask import Flask, request, jsonify, render_template, redirect, url_for, flash
+from flask_cors import CORS
+from dotenv import load_dotenv
+import pyodbc
+from werkzeug.security import check_password_hash # Para verificar la contraseña
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required # La nueva librería
 
-load_dotenv() #Carga las variables del archivo .env al entorno
-
+load_dotenv()
 
 app = Flask(__name__)
 
-# Ampliamos CORS para que cubra las nuevas rutas de la API
+app.secret_key = os.getenv("SECRET_KEY")
+
+# Configuración de CORS
 CORS(app, resources={
     r"/contacto": {"origins": "http://127.0.0.1:5500"},
     r"/api/*": {"origins": "http://127.0.0.1:5500"}
 })
 
-STOCK_FILE = 'stock.json'
+# Obtenemos las variables de entorno
 EMAIL_FROM = os.getenv("EMAIL_FROM")
 EMAIL_TO = os.getenv("EMAIL_TO")
 EMAIL_PASS = os.getenv("EMAIL_PASS")
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
+# Obtenemos la nueva cadena de conexión a la base de datos
+DB_CONNECTION_STRING = os.getenv("DATABASE_CONNECTION_STRING")
 
-def leer_stock():
-    """Lee la base de datos de productos desde stock.json."""
-    if not os.path.exists(STOCK_FILE):
-        return []
-    with open(STOCK_FILE, 'r', encoding='utf-8') as f:
-        return json.load(f)
+# Configuración de Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login' # Si un usuario no logeado intenta acceder a una página protegida, lo redirige aquí
 
-def escribir_stock(data):
-    """Escribe la base de datos de productos en stock.json."""
-    with open(STOCK_FILE, 'w', encoding='utf-8') as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+# Creo una clase 'User' que Flask-Login puede entender
+class User(UserMixin):
+    def __init__(self, id, email, nombre):
+        self.id = id
+        self.email = email
+        self.nombre = nombre
 
-# --- NUEVA RUTA: Para que el frontend obtenga los productos ---
+# Esta función le dice a Flask-Login cómo encontrar a un usuario por su ID
+@login_manager.user_loader
+def load_user(user_id):
+    conn = pyodbc.connect(DB_CONNECTION_STRING)
+    cursor = conn.cursor()
+    cursor.execute("SELECT UsuarioID, Email, Nombre FROM Usuarios WHERE UsuarioID = ?", user_id)
+    user_data = cursor.fetchone()
+    conn.close()
+    if user_data:
+        return User(id=user_data.UsuarioID, email=user_data.Email, nombre=user_data.Nombre)
+    return None
+
+# --- RUTA PARA OBTENER PRODUCTOS (MODIFICADA) ---
 @app.route("/api/productos", methods=["GET"])
 def obtener_productos():
-    productos = leer_stock()
-    return jsonify(productos)
+    productos_dict = {} # Usaremos un diccionario para agrupar las imágenes por producto
 
-# --- NUEVA RUTA: Para actualizar el stock después de una compra ---
+    try:
+        # Nos conectamos a la base de datos usando la cadena de conexión
+        conn = pyodbc.connect(DB_CONNECTION_STRING)
+        cursor = conn.cursor()
+
+        # Ejecutamos una consulta SQL que une Productos con sus Imágenes
+        # sql_query = "EXEC usp_ObtenerTodosLosProductos;"
+        sql_query = """
+            SELECT p.ProductoID, p.Nombre, p.Descripcion, p.Precio, p.Stock, p.Categoria, i.URL
+            FROM Productos p
+            LEFT JOIN ImagenesProducto i ON p.ProductoID = i.ProductoID
+            ORDER BY p.ProductoID;
+        """
+        cursor.execute(sql_query)
+        
+        # Procesamos las filas que nos devuelve la base de datos
+        for row in cursor.fetchall():
+            producto_id = row.ProductoID
+            # Si es la primera vez que vemos este producto, creamos su entrada
+            if producto_id not in productos_dict:
+                productos_dict[producto_id] = {
+                    "nombre": row.Nombre,
+                    "descripcion": row.Descripcion,
+                    "precio": float(row.Precio), # Convertimos de Decimal a float
+                    "stock": row.Stock,
+                    "categoria": row.Categoria,
+                    "imagenes": []
+                }
+            # Añadimos la URL de la imagen a la lista de imágenes del producto
+            if row.URL:
+                productos_dict[producto_id]["imagenes"].append(row.URL)
+
+    except Exception as e:
+        print(f"Error al conectar o consultar la base de datos: {e}")
+        return jsonify({"error": "No se pudo conectar a la base de datos"}), 500
+    finally:
+        #Cerramos la conexión a la base de datos
+        if 'conn' in locals() and conn:
+            conn.close()
+
+    # Convertimos el diccionario de productos en una lista y la devolvemos como JSON
+    lista_productos = list(productos_dict.values())
+    return jsonify(lista_productos)
+
+
+# --- NUEVAS RUTAS PARA AUTENTICACIÓN ---
+@app.route('/login', methods=['POST']) # Solo acepta POST, ya no muestra una página
+def login():
+    email = request.form.get('email')
+    password = request.form.get('password')
+    
+    # Obtenemos la URL de la que vino el usuario para poder redirigirlo allí
+    next_url = request.referrer or url_for('obtener_productos')
+
+    conn = pyodbc.connect(DB_CONNECTION_STRING)
+    cursor = conn.cursor()
+    cursor.execute("SELECT UsuarioID, Email, Nombre, HashContrasena FROM Usuarios WHERE Email = ?", email)
+    user_data = cursor.fetchone()
+    conn.close()
+
+    if user_data and check_password_hash(user_data.HashContrasena, password):
+        user = User(id=user_data.UsuarioID, email=user_data.Email, nombre=user_data.Nombre)
+        login_user(user)
+        # Si el login es exitoso, redirigimos al futuro panel de admin (por ahora a la home)
+        return redirect(url_for('obtener_productos')) 
+    else:
+        # Si el login falla, redirigimos a la página anterior con un parámetro de error
+        return redirect(f"{next_url}?login_error=1")
+
+# --- RUTA PARA ACTUALIZAR STOCK (MODIFICADA) ---
 @app.route("/api/actualizar-stock", methods=["POST"])
 def actualizar_stock_ruta():
     carrito = request.get_json()
     if not carrito:
         return jsonify({"success": False, "error": "No se recibió el carrito."}), 400
 
-    stock_actual = leer_stock()
-    
-    for item_carrito in carrito:
-        producto_en_stock = next((p for p in stock_actual if p['nombre'] == item_carrito['nombre']), None)
-        if producto_en_stock:
-            if producto_en_stock['stock'] >= item_carrito['cantidad']:
-                producto_en_stock['stock'] -= item_carrito['cantidad']
-            else:
-                return jsonify({"success": False, "error": f"Stock insuficiente para {item_carrito['nombre']}"}), 400
-        else:
-            return jsonify({"success": False, "error": f"Producto no encontrado: {item_carrito['nombre']}"}), 404
-            
-    escribir_stock(stock_actual)
-    return jsonify({"success": True, "message": "Stock actualizado correctamente."})
+    try:
+        conn = pyodbc.connect(DB_CONNECTION_STRING)
+        cursor = conn.cursor()
+        
+        for item_carrito in carrito:
+            # Llamamos al stored procedure para actualizar el stock de forma segura
+            # O ejecutamos una consulta directa con validación
+            sql = "{CALL usp_ActualizarStockPorVenta (?, ?)}"
+            params = (item_carrito['nombre'], item_carrito['cantidad'])
+            # Nota: El Stored Procedure debe buscar el producto por nombre y validar el stock
+            cursor.execute(sql, params)
 
-# --- RUTA DE CONTACTO ---
+        conn.commit() # Confirmamos todos los cambios en la base de datos
+        return jsonify({"success": True, "message": "Stock actualizado correctamente."})
+
+    except Exception as e:
+        print(f"Error al actualizar el stock: {e}")
+        return jsonify({"success": False, "error": f"Error en la base de datos: {e}"}), 500
+    finally:
+        if 'conn' in locals() and conn:
+            conn.close()
+
+
+# --- RUTA DE CONTACTO (SIN CAMBIOS) ---
 @app.route("/contacto", methods=["POST", "OPTIONS"])
 def contacto():
     if request.method == "OPTIONS":
@@ -80,22 +173,18 @@ def contacto():
     if not all([nombre, email, mensaje]):
         return {"success": False, "error": "Todos los campos son obligatorios."}, 400
 
- #Construcción del cuerpo del mensaje
     body = f"Nombre: {nombre}\nEmail: {email}\nMensaje: {mensaje}"
     msg = MIMEText(body, "plain", "utf-8")
     msg["Subject"] = Header("Nuevo mensaje de contacto", "utf-8")
     msg["From"] = formataddr((Header("Formulario Web", "utf-8").encode(), EMAIL_FROM))
     msg["To"] = EMAIL_TO
 
-
-    # Lógica de envío de email...
     try:
         server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
         server.starttls()
         server.login(EMAIL_FROM, EMAIL_PASS)
         server.sendmail(EMAIL_FROM, EMAIL_TO, msg.as_string())
         server.quit()
-        print("Mensaje de contacto enviado con éxito.")
         return jsonify({"success": True})
         
     except Exception as e:
