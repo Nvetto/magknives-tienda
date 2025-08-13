@@ -15,7 +15,7 @@ from flask_login import current_user
 
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='../templates')
 
 app.secret_key = os.getenv("SECRET_KEY")
 
@@ -164,6 +164,37 @@ def admin_dashboard():
     # Pasamos el nombre del usuario actual a la plantilla
     return render_template('admin_dashboard.html', nombre_usuario=current_user.nombre)
 
+
+# --- NUEVO ENDPOINT PARA VERIFICAR ESTADO DE AUTENTICACIÓN ---
+@app.route('/api/auth/status')
+def auth_status():
+    # Primero, verificamos si hay un usuario logeado
+    if current_user.is_authenticated:
+        # Si está logeado, consultamos si tiene el rol de 'admin'
+        conn = pyodbc.connect(DB_CONNECTION_STRING)
+        cursor = conn.cursor()
+        sql_query = "SELECT 1 FROM UsuarioRoles WHERE UsuarioID = ? AND RolID = 1" # RolID 1 = admin
+        cursor.execute(sql_query, current_user.id)
+        is_admin = cursor.fetchone()
+        conn.close()
+
+        # Si es admin, devolvemos un JSON que lo confirme
+        if is_admin:
+            return jsonify({
+                "is_authenticated": True,
+                "role": "admin",
+                "nombre": current_user.nombre
+            })
+        else:
+            # Si es un usuario logeado pero no admin (ej. un futuro 'cliente')
+            return jsonify({
+                "is_authenticated": True,
+                "role": "cliente",
+                "nombre": current_user.nombre
+            })
+            
+    # Si no hay nadie logeado
+    return jsonify({"is_authenticated": False})
 
 # --- RUTA PARA ACTUALIZAR STOCK (MODIFICADA) ---
 @app.route("/api/actualizar-stock", methods=["POST"])

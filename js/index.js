@@ -126,22 +126,6 @@ function renderizarDisponibles(productos) {
     });
 }
 
-// El resto del archivo (DOMContentLoaded) no cambia
-document.addEventListener("DOMContentLoaded", () => {
-    if (document.getElementById("disponiblesCompleto")) {
-        fetch('http://127.0.0.1:5000/api/productos')
-            .then(response => response.json())
-            .then(productos => {
-                renderizarDisponibles(productos);
-                configurarBusqueda();
-            })
-            .catch(error => {
-                console.error('Error al cargar los productos:', error);
-                document.getElementById("disponiblesCompleto").innerHTML = '<p class="text-center text-red-600">No se pudieron cargar los productos. Asegúrate de que el servidor esté funcionando.</p>';
-            });
-    }
-});
-
 document.addEventListener("DOMContentLoaded", () => {
     if (document.getElementById("disponiblesCompleto")) {
         fetch('http://127.0.0.1:5000/api/productos')

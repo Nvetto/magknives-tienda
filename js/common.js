@@ -51,6 +51,35 @@ function agregarAlCarrito(producto) {
     actualizarCarrito();
 }
 
+function actualizarEstadoHeader() {
+    const btnLogin = document.getElementById('abrirLogin');
+    const btnPanelAdmin = document.getElementById('btnPanelAdmin');
+    const btnCerrarSesion = document.getElementById('btnCerrarSesion');
+
+    // Hacemos la petición a nuestro nuevo endpoint
+    fetch('http://127.0.0.1:5000/api/auth/status')
+        .then(response => response.json())
+        .then(data => {
+            if (data.is_authenticated) {
+                // Si el usuario está logeado, ocultamos el botón de Login
+                btnLogin.classList.add('hidden');
+                btnCerrarSesion.classList.remove('hidden');
+
+                // Y si además es 'admin', mostramos el botón del panel
+                if (data.role === 'admin') {
+                    btnPanelAdmin.classList.remove('hidden');
+                }
+            } else {
+                // Si no está logeado, nos aseguramos de que vea el botón de Login
+                // y que los botones de admin y logout estén ocultos.
+                btnLogin.classList.remove('hidden');
+                btnPanelAdmin.classList.add('hidden');
+                btnCerrarSesion.classList.add('hidden');
+            }
+        })
+        .catch(error => console.error("Error al verificar el estado de autenticación:", error));
+}
+
 function actualizarCarrito() {
     const lista = document.getElementById("listaCarrito");
     const total = document.getElementById("totalCarrito");
@@ -136,6 +165,7 @@ function generarEnlaceWhatsapp() {
 // =======================================================================
 
 document.addEventListener("DOMContentLoaded", () => {
+    actualizarEstadoHeader();
     cargarCarrito();
 
 

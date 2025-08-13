@@ -20,14 +20,18 @@
         No se encontraron productos que coincidan con tu búsqueda.
       </div>
     </div>
-    <div class="space-x-4">
-      <button id="abrirCarrito" class="relative px-3 py-2">
-        <span>Mi carrito</span>
-        <span id="contadorCarrito" class="absolute -top-2 -right-2 bg-yellow-500 text-black text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">
-        </span>
-        </button>
-        <button id="abrirLogin" class="px-3 py-2">Login</button>
-    </div>
+   <div class="space-x-4 flex items-center">
+    <button id="abrirCarrito" class="relative px-3 py-2">
+      <span>Mi carrito</span>
+      <span id="contadorCarrito" class="absolute -top-2 -right-2 bg-yellow-500 text-black text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden"></span>
+    </button>
+
+    <button id="abrirLogin" class="px-3 py-2">Login</button>
+
+    <a href="/admin/dashboard" id="btnPanelAdmin" class="px-3 py-2 bg-yellow-600 text-white rounded font-bold hidden">Panel Admin</a>
+
+    <a href="/logout" id="btnCerrarSesion" class="px-3 py-2 hidden">Cerrar Sesión</a>
+</div>
   </header>
 
   <div id="modalCarrito" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
