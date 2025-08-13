@@ -31,7 +31,7 @@ def add_header(response):
 
 # Configuración de CORS
 CORS(app, resources={
-     r"/login": {"origins": "http://127.0.0.1:5500"},
+     r"/login": {"origins": "http://127.0.0.1:5500","supports_credentials": True},
     r"/logout": {"origins": "http://127.0.0.1:5500","supports_credentials": True}, 
     r"/contacto": {"origins": "http://127.0.0.1:5500"},
     r"/api/*": {"origins": "http://127.0.0.1:5500", "supports_credentials": True}
