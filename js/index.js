@@ -86,7 +86,7 @@ function renderizarDisponibles(productos) {
             ? `<button data-nombre-producto="${prod.nombre}" class="add-to-cart-btn bg-blue-600 text-white px-3 py-2 rounded mt-4 hover:bg-blue-700 w-full">Agregar al carrito</button>`
             : `<a href="${generarEnlaceCotizador(prod)}" class="block text-center bg-gray-500 text-white px-3 py-2 rounded mt-4 hover:bg-gray-600 w-full">Cotizá el tuyo</a>`;
 
-        const carruselHTML = prod.imagenes.map(imgSrc => `<li><img src="${imgSrc}" alt="${prod.nombre}"></li>`).join('');
+        const carruselHTML = prod.imagenes.slice(0, 4).map(imgSrc => `<li><img src="${imgSrc}" alt="${prod.nombre}"></li>`).join('');
 
         // --- La estructura interior  contiene el layout flex ---
         productoDiv.innerHTML = `

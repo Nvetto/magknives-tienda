@@ -153,8 +153,8 @@
     position: absolute;
     top: 12px;
     right: -45px; /* Lo movemos hacia afuera para que la rotación lo coloque en la esquina */
-    background-color: #b91c1c; /* Un rojo oscuro (red-800 de Tailwind) */
-    color: white;
+    background-color: #ad0b0b; /* Un rojo oscuro (red-800 de Tailwind) */
+    color: rgb(255, 255, 255);
     padding: 5px 40px; /* El padding horizontal ancho crea la longitud de la cinta */
     font-size: 12px;
     font-weight: bold;

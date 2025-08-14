@@ -12,6 +12,10 @@ from flask_login import LoginManager, UserMixin, login_user, logout_user, login_
 from flask import abort
 from functools import wraps
 from flask_login import current_user
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+from flask import Flask, request, jsonify
 
 load_dotenv()
 
@@ -93,6 +97,37 @@ def load_user(user_id):
     if user_data:
         return User(id=user_data.UsuarioID, email=user_data.Email, nombre=user_data.Nombre)
     return None
+
+# --- CONFIGURACIÓN DE CLOUDINARY ---
+cloudinary.config( 
+  cloud_name = os.getenv("CLOUD_NAME"), 
+  api_key = os.getenv("API_KEY"), 
+  api_secret = os.getenv("API_SECRET"),
+  secure = True
+)
+
+# --- RUTA PARA SUBIR IMÁGENES ---
+@app.route('/api/upload-image', methods=['POST'])
+@admin_required # ¡Protegemos la ruta! Solo un admin puede subir imágenes.
+def upload_image():
+    # Verificamos si se envió un archivo en la petición
+    if 'file' not in request.files:
+        return jsonify({"success": False, "error": "No se encontró el archivo"}), 400
+
+    file_to_upload = request.files['file']
+
+    try:
+        # Enviamos el archivo a Cloudinary para que lo suba
+        upload_result = cloudinary.uploader.upload(file_to_upload)
+        
+        # Cloudinary nos devuelve mucha información, pero la más importante es la URL segura.
+        image_url = upload_result.get('secure_url')
+
+        # Devolvemos la URL pública de la imagen al frontend
+        return jsonify({"success": True, "image_url": image_url})
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 # --- RUTA PARA OBTENER PRODUCTOS ---
 @app.route("/api/productos", methods=["GET"])
