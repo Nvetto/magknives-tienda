@@ -193,11 +193,20 @@ def login():
     email = request.form.get('email')
     password = request.form.get('password')
 
+    # --- INICIO DE LOS PRINTS DE DEPURACIÓN ---
+    print("=========================================")
+    print(f"Intento de login para el email: [{email}]")
+    print(f"Contraseña recibida (longitud): {len(password)}")
+    # --- FIN DE LOS PRINTS DE DEPURACIÓN ---
+
     conn = pyodbc.connect(DB_CONNECTION_STRING)
     cursor = conn.cursor()
-    cursor.execute("SELECT UsuarioID, Email, Nombre, HashContrasena FROM Usuarios WHERE Email = ?", email)
+    cursor.execute("SELECT UsuarioID, Email, Nombre, HashContrasena FROM [dbo].[Usuarios] WHERE Email = ?", email)
     user_data = cursor.fetchone()
     conn.close()
+
+    # --- MÁS PRINTS DE DEPURACIÓN ---
+    print(f"Resultado de la búsqueda en DB: {user_data}")
 
     if user_data and check_password_hash(user_data.HashContrasena, password):
         # Si las credenciales son correctas, creamos el usuario y la sesión
@@ -207,6 +216,8 @@ def login():
         return jsonify({"success": True, "nombre": user.nombre})
     else:
         # Si las credenciales son incorrectas, devolvemos un error en JSON
+        print("-> FALLO: El usuario no existe o la contraseña es incorrecta.")
+        print("=========================================\n")
         return jsonify({"success": False, "error": "Email o contraseña incorrectos"})
 
 
