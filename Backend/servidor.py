@@ -25,6 +25,9 @@ app = Flask(__name__, template_folder='../templates')
 
 app.secret_key = os.getenv("SECRET_KEY")
 
+app.config['SESSION_COOKIE_SAMESITE'] = 'None'
+app.config['SESSION_COOKIE_SECURE'] = True
+
 origins = [
     "http://127.0.0.1:5500", # Tu entorno de desarrollo local
     "https://magknives.netlify.app" # Tu sitio en producción
