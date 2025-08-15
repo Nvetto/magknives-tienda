@@ -47,7 +47,7 @@ def add_header(response):
 CORS(app, resources={
      r"/login": {"origins": origins, "supports_credentials": True},
      r"/logout": {"origins": origins, "supports_credentials": True}, 
-     r"/contacto": {"origins": origins},
+     r"/contacto": {"origins": origins, "supports_credentials": True},
      r"/api/*": {"origins": origins, "supports_credentials": True}
 })
 
