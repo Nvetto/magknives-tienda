@@ -126,6 +126,13 @@ cloudinary.config(
   secure = True
 )
 
+
+# --- RUTA PARA HEALTH CHECK ---
+@app.route('/health')
+def health_check():
+    # Esta ruta no hace nada más que devolver un OK. Es súper rápida y ligera.
+    return jsonify({"status": "ok"}), 200
+
 # --- RUTA PARA SUBIR IMÁGENES ---
 @app.route('/api/upload-image', methods=['POST'])
 @admin_required # ¡Protegemos la ruta! Solo un admin puede subir imágenes.
