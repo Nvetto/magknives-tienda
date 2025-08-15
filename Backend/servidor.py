@@ -25,6 +25,11 @@ app = Flask(__name__, template_folder='../templates')
 
 app.secret_key = os.getenv("SECRET_KEY")
 
+origins = [
+    "http://127.0.0.1:5500", # Tu entorno de desarrollo local
+    "https://magknives.netlify.app/" # Tu sitio en producción
+]
+
 @app.after_request
 def add_header(response):
     """
@@ -37,10 +42,10 @@ def add_header(response):
 
 # Configuración de CORS
 CORS(app, resources={
-     r"/login": {"origins": "http://127.0.0.1:5500","supports_credentials": True},
-    r"/logout": {"origins": "http://127.0.0.1:5500","supports_credentials": True}, 
-    r"/contacto": {"origins": "http://127.0.0.1:5500"},
-    r"/api/*": {"origins": "http://127.0.0.1:5500", "supports_credentials": True}
+     r"/login": {"origins": origins, "supports_credentials": True},
+     r"/logout": {"origins": origins, "supports_credentials": True}, 
+     r"/contacto": {"origins": origins},
+     r"/api/*": {"origins": origins, "supports_credentials": True}
 })
 
 # Obtenemos las variables de entorno
