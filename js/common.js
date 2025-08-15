@@ -98,7 +98,6 @@ function actualizarEstadoHeader() {
                 // Y si además es 'admin', mostramos el botón del panel
                 if (data.role === 'admin') {
                     btnPanelAdmin.classList.remove('hidden');
-                    btnPanelAdmin.href = `${API_BASE_URL}/admin/dashboard`;
                 }
             } else {
                 // Si no está logeado, nos aseguramos de que vea el botón de Login

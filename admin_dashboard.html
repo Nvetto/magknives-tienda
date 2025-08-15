@@ -139,6 +139,52 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCancelConfirm = document.getElementById('btnCancelConfirm');
     const btnGuardar = document.getElementById('btnGuardar');
 
+      // --- FUNCIÓN PARA CARGAR Y RENDERIZAR LOS PRODUCTOS ---
+    const cargarProductos = async () => {
+        try {
+            // Hacemos la petición a la API para obtener los productos
+            const res = await fetch(`${API_BASE_URL}/api/productos`, { credentials: 'include' });
+            
+            // Si la respuesta es 401 (No autorizado), redirige al inicio
+            if (res.status === 401) {
+                alert("Tu sesión ha expirado. Por favor, inicia sesión de nuevo.");
+                window.location.href = 'index.html';
+                return;
+            }
+
+            const productos = await res.json();
+            const tbody = document.querySelector('tbody');
+            tbody.innerHTML = ''; // Limpiamos la tabla
+
+            if (productos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">No hay productos para mostrar.</td></tr>';
+                return;
+            }
+
+            // Creamos las filas de la tabla con los datos recibidos
+            productos.forEach(producto => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm font-medium text-gray-900">${producto.nombre}</div></td>
+                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">${producto.categoria}</span></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">$${producto.precio.toFixed(2)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-bold ${producto.stock > 0 ? 'text-green-600' : 'text-red-600'}">${producto.stock}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                        <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-4 btn-editar" data-id="${producto.id}">Editar</a>
+                        <a href="#" class="text-red-600 hover:text-red-900 btn-eliminar" data-id="${producto.id}" data-nombre="${producto.nombre}">Eliminar</a>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch (error) {
+            showNotification(`Error al cargar productos: ${error.message}`, 'error');
+        }
+    };
+    
+    cargarProductos();
+
+
+
     // --- FUNCIONES DE UI (NOTIFICACIONES Y MODALES) ---
     const showNotification = (message, type = 'success') => {
         notificationMessage.textContent = message;
