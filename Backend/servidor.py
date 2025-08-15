@@ -63,7 +63,17 @@ DB_CONNECTION_STRING = os.getenv("DATABASE_CONNECTION_STRING")
 # Configuración de Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = 'login' # Si un usuario no logeado intenta acceder a una página protegida, lo redirige aquí
+
+# Creamos una función personalizada para manejar el acceso no autorizado
+def unauthorized_callback():
+    return jsonify({
+        "success": False,
+        "error": "Login Required",
+        "message": "Debes iniciar sesión para acceder a este recurso."
+    }), 401
+
+# Le decimos a Flask-Login que use nuestra función en lugar de redirigir
+login_manager.unauthorized_handler(unauthorized_callback)
 
 def admin_required(f):
     @wraps(f)
