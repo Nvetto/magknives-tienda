@@ -128,19 +128,33 @@ def upload_image():
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+    
 
-# --- RUTA PARA OBTENER PRODUCTOS ---
-@app.route("/api/productos", methods=["GET"])
-def obtener_productos():
-    productos_dict = {} # Usaremos un diccionario para agrupar las imágenes por producto
-
+def extraer_public_id_de_url(url):
+    """
+    Extrae el public_id de una URL de Cloudinary para poder eliminar la imagen.
+    Ej: '.../upload/v1234/folder/image.jpg' -> 'folder/image'
+    """
     try:
-        # Nos conectamos a la base de datos usando la cadena de conexión
+        # Encuentra la parte de la URL después de '/upload/'
+        parte_esencial = url.split('/upload/')[1]
+        # Quita el número de versión (ej. 'v12345/')
+        sin_version = parte_esencial.split('/', 1)[1]
+        # Quita la extensión del archivo (ej. '.jpg')
+        public_id = os.path.splitext(sin_version)[0]
+        return public_id
+    except IndexError:
+        return None    
+
+# --- FUNCIÓN AUXILIAR PARA OBTENER PRODUCTOS---
+def _get_all_products():
+    """
+    Función interna para obtener y formatear todos los productos de la base de datos.
+    """
+    productos_dict = {}
+    try:
         conn = pyodbc.connect(DB_CONNECTION_STRING)
         cursor = conn.cursor()
-
-        # Ejecutamos una consulta SQL que une Productos con sus Imágenes
-        # sql_query = "EXEC usp_ObtenerTodosLosProductos;"
         sql_query = """
             SELECT p.ProductoID, p.Nombre, p.Descripcion, p.Precio, p.Stock, p.Categoria, i.URL
             FROM Productos p
@@ -149,33 +163,36 @@ def obtener_productos():
         """
         cursor.execute(sql_query)
         
-        # Procesamos las filas que nos devuelve la base de datos
         for row in cursor.fetchall():
             producto_id = row.ProductoID
-            # Si es la primera vez que vemos este producto, creamos su entrada
             if producto_id not in productos_dict:
                 productos_dict[producto_id] = {
+                    "id": producto_id, # Añadimos el ID para futuras acciones
                     "nombre": row.Nombre,
                     "descripcion": row.Descripcion,
-                    "precio": float(row.Precio), # Convertimos de Decimal a float
+                    "precio": float(row.Precio),
                     "stock": row.Stock,
                     "categoria": row.Categoria,
                     "imagenes": []
                 }
-            # Añadimos la URL de la imagen a la lista de imágenes del producto
             if row.URL:
                 productos_dict[producto_id]["imagenes"].append(row.URL)
-
     except Exception as e:
         print(f"Error al conectar o consultar la base de datos: {e}")
-        return jsonify({"error": "No se pudo conectar a la base de datos"}), 500
+        return [] # Devuelve lista vacía en caso de error
     finally:
-        #Cerramos la conexión a la base de datos
         if 'conn' in locals() and conn:
             conn.close()
+    
+    return list(productos_dict.values())
 
-    # Convertimos el diccionario de productos en una lista y la devolvemos como JSON
-    lista_productos = list(productos_dict.values())
+# --- RUTA PARA OBTENER PRODUCTOS ---
+@app.route("/api/productos", methods=["GET"])
+def obtener_productos():
+    # Ahora esta ruta simplemente llama a nuestra función auxiliar
+    lista_productos = _get_all_products()
+    if not lista_productos and "error" in locals(): # Manejo de error básico
+        return jsonify({"error": "No se pudo conectar a la base de datos"}), 500
     return jsonify(lista_productos)
 
 
@@ -193,20 +210,11 @@ def login():
     email = request.form.get('email')
     password = request.form.get('password')
 
-    # --- INICIO DE LOS PRINTS DE DEPURACIÓN ---
-    print("=========================================")
-    print(f"Intento de login para el email: [{email}]")
-    print(f"Contraseña recibida (longitud): {len(password)}")
-    # --- FIN DE LOS PRINTS DE DEPURACIÓN ---
-
     conn = pyodbc.connect(DB_CONNECTION_STRING)
     cursor = conn.cursor()
     cursor.execute("SELECT UsuarioID, Email, Nombre, HashContrasena FROM [dbo].[Usuarios] WHERE Email = ?", email)
     user_data = cursor.fetchone()
     conn.close()
-
-    # --- MÁS PRINTS DE DEPURACIÓN ---
-    print(f"Resultado de la búsqueda en DB: {user_data}")
 
     if user_data and check_password_hash(user_data.HashContrasena, password):
         # Si las credenciales son correctas, creamos el usuario y la sesión
@@ -216,17 +224,110 @@ def login():
         return jsonify({"success": True, "nombre": user.nombre})
     else:
         # Si las credenciales son incorrectas, devolvemos un error en JSON
-        print("-> FALLO: El usuario no existe o la contraseña es incorrecta.")
-        print("=========================================\n")
         return jsonify({"success": False, "error": "Email o contraseña incorrectos"})
 
 
     # --- RUTA PROTEGIDA PARA EL PANEL DE ADMINISTRACIÓN ---
 @app.route('/admin/dashboard')
-@admin_required  # Solo usuarios logeados como admin pueden ver esta página.
+@admin_required
 def admin_dashboard():
-    return render_template('admin_dashboard.html', nombre_usuario=current_user.nombre)
+    productos = _get_all_products()
+    return render_template('admin_dashboard.html', nombre_usuario=current_user.nombre, productos=productos)
 
+# --- RUTA PARA CREAR UN PRODUCTO ---
+@app.route('/api/productos', methods=['POST'])
+@admin_required
+def crear_producto():
+    data = request.get_json()
+
+    # Verificamos que 'data' no sea None antes de usarlo
+    if not data:
+        return jsonify({"success": False, "error": "No se recibieron datos"}), 400
+
+    # Verificación de campos
+    required_fields = ['nombre', 'precio', 'stock', 'categoria', 'imagenes_urls']
+    for field in required_fields:
+        if field not in data:
+            return jsonify({"success": False, "error": f"Falta el campo obligatorio: {field}"}), 400
+
+    try:
+        conn = pyodbc.connect(DB_CONNECTION_STRING)
+        cursor = conn.cursor()
+
+        # 1. Llamamos al Stored Procedure de forma explícita
+        sql_exec_sp = """
+            DECLARE @NuevoProductoID INT;
+            EXEC usp_CrearProducto ?, ?, ?, ?, ?, @NuevoProductoID OUTPUT;
+            SELECT @NuevoProductoID;
+        """
+        params = (
+            data['nombre'],
+            data.get('descripcion', ''),
+            float(data['precio']),
+            int(data['stock']),
+            data['categoria']
+        )
+        cursor.execute(sql_exec_sp, params)
+        nuevo_producto_id = cursor.fetchone()[0]
+
+        # 2. Iteramos sobre el array de URLs (usando la clave correcta 'imagenes_urls') y las insertamos una por una.
+        if nuevo_producto_id and data['imagenes_urls']:
+            sql_insert_img = "INSERT INTO ImagenesProducto (ProductoID, URL) VALUES (?, ?)"
+            urls_a_insertar = [(nuevo_producto_id, url) for url in data['imagenes_urls']]
+            cursor.executemany(sql_insert_img, urls_a_insertar)
+
+        conn.commit()
+        return jsonify({"success": True, "message": "Producto creado con éxito", "producto_id": nuevo_producto_id})
+
+    except Exception as e:
+        if 'conn' in locals() and conn:
+            conn.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+    finally:
+        if 'conn' in locals() and conn:
+            conn.close()
+
+# --- RUTA PARA ELIMINAR UN PRODUCTO (DELETE) ---
+@app.route('/api/productos/<int:producto_id>', methods=['DELETE'])
+@admin_required
+def eliminar_producto(producto_id):
+    conn = None  # Definimos conn fuera del try para que esté disponible en el finally
+    try:
+        conn = pyodbc.connect(DB_CONNECTION_STRING)
+        cursor = conn.cursor()
+
+        # 1. OBTENEMOS LAS URLS DE LAS IMÁGENES ANTES DE BORRAR EL PRODUCTO
+        sql_select_imgs = "SELECT URL FROM ImagenesProducto WHERE ProductoID = ?"
+        cursor.execute(sql_select_imgs, producto_id)
+        urls_a_borrar = [row.URL for row in cursor.fetchall()]
+
+        # 2. ITERAMOS Y BORRAMOS CADA IMAGEN DE CLOUDINARY
+        if urls_a_borrar:
+            print(f"Eliminando {len(urls_a_borrar)} imágenes de Cloudinary para el producto {producto_id}...")
+            for url in urls_a_borrar:
+                public_id = extraer_public_id_de_url(url)
+                if public_id:
+                    # Usamos la API de Cloudinary para destruir la imagen
+                    cloudinary.uploader.destroy(public_id)
+                    print(f" - Imagen {public_id} eliminada de Cloudinary.")
+
+        # 3. FINALMENTE, ELIMINAMOS EL PRODUCTO DE NUESTRA BASE DE DATOS
+        print(f"Eliminando producto {producto_id} de la base de datos...")
+        sql_call_sp = "{CALL usp_EliminarProducto(?)}"
+        cursor.execute(sql_call_sp, producto_id)
+        
+        conn.commit()
+        print("Producto eliminado con éxito de la base de datos.")
+        return jsonify({"success": True, "message": "Producto y sus imágenes eliminados con éxito."})
+
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        print(f"ERROR al eliminar producto: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
 
 # --- NUEVO ENDPOINT PARA VERIFICAR ESTADO DE AUTENTICACIÓN ---
 @app.route('/api/auth/status')

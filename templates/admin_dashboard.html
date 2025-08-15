@@ -6,22 +6,243 @@
     <title>Dashboard - Magknives Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-100 font-sans">
 
     <nav class="bg-gray-800 text-white p-4 flex justify-between items-center">
         <h1 class="text-xl font-bold">Panel de Administración de Magknives</h1>
         <div>
             <span class="mr-4">Hola, {{ nombre_usuario }}</span>
-            <a href="/logout" class="bg-red-600 hover:bg-red-700 px-3 py-2 rounded">Cerrar Sesión</a>
+            <a href="#" id="btnLogout" class="bg-red-600 hover:bg-red-700 px-3 py-2 rounded">Cerrar Sesión</a>
         </div>
     </nav>
 
     <main class="container mx-auto p-8">
-        <h2 class="text-3xl font-bold mb-6">Bienvenido al Panel</h2>
-        <p class="text-gray-700">
-            Desde aquí podrás gestionar los productos de tu tienda.
-        </p>
-        </main>
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-3xl font-bold">Gestión de Productos</h2>
+            <div class="flex space-x-4">
+                <a href="http://127.0.0.1:5500/index.html" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    ← Regresar al Sitio
+                </a>
+                <a href="#" id="btnAbrirModalCrear" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                    + Crear Nuevo Producto
+                </a>
+            </div>
+        </div>
 
+        <div class="bg-white shadow-md rounded-lg overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for producto in productos %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">{{ producto.nombre }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                {{ producto.categoria }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">${{ "%.2f"|format(producto.precio) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-bold {{ 'text-green-600' if producto.stock > 0 else 'text-red-600' }}">{{ producto.stock }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                            <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-4">Editar</a>
+                            <a href="#" class="text-red-600 hover:text-red-900"data-id="{{ producto.id }}" data-nombre="{{ producto.nombre }}">Eliminar</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">No hay productos para mostrar.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div id="modalProducto" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+        <div class="mt-3 text-center">
+            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modalTitle">Crear Nuevo Producto</h3>
+            <div class="mt-2 px-7 py-3">
+                
+                <form id="formCrearProducto" class="text-left space-y-4">
+                    <div>
+                        <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre del Producto</label>
+                        <input type="text" name="nombre" id="nombre" class="mt-1 block w-full border border-gray-300 rounded-md p-2" required>
+                    </div>
+                    <div>
+                        <label for="descripcion" class="block text-sm font-medium text-gray-700">Descripción</label>
+                        <textarea name="descripcion" id="descripcion" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md p-2"></textarea>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="precio" class="block text-sm font-medium text-gray-700">Precio</label>
+                            <input type="number" name="precio" id="precio" step="0.01" class="mt-1 block w-full border border-gray-300 rounded-md p-2" required>
+                        </div>
+                        <div>
+                            <label for="stock" class="block text-sm font-medium text-gray-700">Stock</label>
+                            <input type="number" name="stock" id="stock" class="mt-1 block w-full border border-gray-300 rounded-md p-2" required>
+                        </div>
+                        <div>
+                             <label for="categoria" class="block text-sm font-medium text-gray-700">Categoría</label>
+                             <input type="text" name="categoria" id="categoria" class="mt-1 block w-full border border-gray-300 rounded-md p-2" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="imagen" class="block text-sm font-medium text-gray-700">Imagen del Producto</label>
+                        <input type="file" name="imagen" id="imagen"  class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" required multiple>
+                    </div>
+                </form>
+
+            </div>
+            <div class="items-center px-4 py-3">
+                <button id="btnGuardar" class="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-green-700">
+                    Guardar Producto
+                </button>
+                 <button id="btnCancelar" class="mt-2 px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+    </main>
+    
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+    // Referencias a los elementos del modal y formulario
+    const modal = document.getElementById('modalProducto');
+    const btnAbrirModal = document.getElementById('btnAbrirModalCrear');
+    const btnCancelar = document.getElementById('btnCancelar');
+    const btnGuardar = document.getElementById('btnGuardar');
+    const form = document.getElementById('formCrearProducto');
+
+    // Función para mostrar/ocultar el modal
+    const toggleModal = () => modal.classList.toggle('hidden');
+
+    btnAbrirModal.addEventListener('click', toggleModal);
+    btnCancelar.addEventListener('click', toggleModal);
+
+    // Lógica para guardar el producto
+    btnGuardar.addEventListener('click', async () => {
+    const imagenInput = document.getElementById('imagen');
+    const archivosImagenes = imagenInput.files;
+
+    if (!form.checkValidity() || archivosImagenes.length === 0) {
+        alert('Por favor, completa todos los campos requeridos y selecciona al menos una imagen.');
+        return;
+    }
+
+    btnGuardar.textContent = 'Subiendo imágenes...';
+    btnGuardar.disabled = true;
+
+    try {
+        // 1. Creamos un array de promesas, una por cada imagen a subir.
+        const promesasDeSubida = Array.from(archivosImagenes).map(archivo => {
+            const formDataImagen = new FormData();
+            formDataImagen.append('file', archivo);
+
+            return fetch('/api/upload-image', {
+                method: 'POST',
+                body: formDataImagen,
+                credentials: 'include'
+            }).then(res => res.json());
+        });
+        
+        // 2. Promise.all() espera a que TODAS las imágenes se hayan subido.
+        const resultadosDeSubida = await Promise.all(promesasDeSubida);
+
+        // 3. Recolectamos todas las URLs de las imágenes subidas.
+        const imagenes_urls = resultadosDeSubida.map(res => {
+            if (!res.success) throw new Error(res.error || 'Una de las imágenes falló al subir.');
+            return res.image_url;
+        });
+
+        btnGuardar.textContent = 'Guardando producto...';
+
+        // 4. Crear el producto con el ARRAY de URLs de imágenes.
+        const datosProducto = {
+            nombre: form.nombre.value,
+            descripcion: form.descripcion.value,
+            precio: parseFloat(form.precio.value),
+            stock: parseInt(form.stock.value),
+            categoria: form.categoria.value,
+            imagenes_urls: imagenes_urls // ¡Ahora es un array!
+        };
+
+        const resProducto = await fetch('/api/productos', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(datosProducto),
+            credentials: 'include'
+        });
+        const dataProducto = await resProducto.json();
+
+        if (dataProducto.success) {
+            alert('¡Producto creado con éxito!');
+            location.reload();
+        } else {
+            throw new Error(dataProducto.error || 'Error al crear el producto.');
+        }
+
+    } catch (error) {
+        alert(`Ocurrió un error: ${error.message}`);
+        btnGuardar.textContent = 'Guardar Producto';
+        btnGuardar.disabled = false;
+    }
+});
+
+// --- LÓGICA PARA LOS BOTONES DE ELIMINAR ---
+const botonesEliminar = document.querySelectorAll('.btn-eliminar');
+
+botonesEliminar.forEach(boton => {
+    boton.addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        const productoId = boton.dataset.id;
+        const productoNombre = boton.dataset.nombre;
+
+        // ¡Importante! Pedimos confirmación antes de borrar.
+        if (!confirm(`¿Estás seguro de que quieres eliminar el producto "${productoNombre}"?`)) {
+            return;
+        }
+
+        try {
+            const respuesta = await fetch(`/api/productos/${productoId}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+
+            const data = await respuesta.json();
+
+            if (data.success) {
+                alert('¡Producto eliminado con éxito!');
+                location.reload(); // Recargamos la página para actualizar la tabla
+            } else {
+                throw new Error(data.error || 'No se pudo eliminar el producto.');
+            }
+        } catch (error) {
+            alert(`Ocurrió un error: ${error.message}`);
+        }
+    });
+});
+ // Logout
+        const btnLogout = document.getElementById('btnLogout');
+        if(btnLogout) {
+            btnLogout.addEventListener('click', (e) => {
+                e.preventDefault();
+                fetch('/logout', { credentials: 'include' })
+                    .then(() => location.href = 'http://127.0.0.1:5500/index.html');
+            });
+        }
+    });
+    </script>
 </body>
 </html>
