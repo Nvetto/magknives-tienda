@@ -329,6 +329,136 @@ def eliminar_producto(producto_id):
         if conn:
             conn.close()
 
+# ---RUTA PARA OBTENER UN SOLO PRODUCTO (GET) ---
+@app.route('/api/productos/<int:producto_id>', methods=['GET'])
+@admin_required
+def obtener_producto(producto_id):
+    try:
+        conn = pyodbc.connect(DB_CONNECTION_STRING)
+        cursor = conn.cursor()
+
+        # Buscamos los detalles del producto
+        sql_producto = "SELECT ProductoID, Nombre, Descripcion, Precio, Stock, Categoria FROM Productos WHERE ProductoID = ?"
+        cursor.execute(sql_producto, producto_id)
+        producto_data = cursor.fetchone()
+
+        if not producto_data:
+            return jsonify({"success": False, "error": "Producto no encontrado"}), 404
+
+        producto = {
+            "id": producto_data.ProductoID,
+            "nombre": producto_data.Nombre,
+            "descripcion": producto_data.Descripcion,
+            "precio": float(producto_data.Precio),
+            "stock": producto_data.Stock,
+            "categoria": producto_data.Categoria,
+            "imagenes": []
+        }
+        
+        # Buscamos sus imágenes
+        sql_imagenes = "SELECT ImagenID, URL FROM ImagenesProducto WHERE ProductoID = ?"
+        cursor.execute(sql_imagenes, producto_id)
+        for img in cursor.fetchall():
+            producto['imagenes'].append({"id": img.ImagenID, "url": img.URL})
+
+        return jsonify({"success": True, "producto": producto})
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+    finally:
+        if 'conn' in locals() and conn:
+            conn.close()
+
+# --- RUTA PARA ACTUALIZAR UN PRODUCTO (PUT) ---
+@app.route('/api/productos/<int:producto_id>', methods=['PUT'])
+@admin_required
+def actualizar_producto(producto_id):
+    data = request.get_json()
+    try:
+        conn = pyodbc.connect(DB_CONNECTION_STRING)
+        cursor = conn.cursor()
+
+        sql_call_sp = "{CALL usp_ActualizarProducto(?, ?, ?, ?, ?, ?)}"
+        params = (
+            producto_id,
+            data['nombre'],
+            data.get('descripcion', ''),
+            float(data['precio']),
+            int(data['stock']),
+            data['categoria']
+        )
+        cursor.execute(sql_call_sp, params)
+        conn.commit()
+        return jsonify({"success": True, "message": "Producto actualizado con éxito."})
+
+    except Exception as e:
+        if 'conn' in locals() and conn:
+            conn.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+    finally:
+        if 'conn' in locals() and conn:
+            conn.close()
+
+# --- RUTA PARA AGREGAR IMAGENES A UN PRODUCTO EXISTENTE  ---
+@app.route('/api/productos/<int:producto_id>/imagenes', methods=['POST'])
+@admin_required
+def agregar_imagenes_a_producto(producto_id):
+    data = request.get_json()
+    urls = data.get('imagenes_urls')
+
+    if not urls or not isinstance(urls, list):
+        return jsonify({"success": False, "error": "Se requiere una lista de URLs de imágenes."}), 400
+
+    try:
+        conn = pyodbc.connect(DB_CONNECTION_STRING)
+        cursor = conn.cursor()
+        
+        sql_call_sp = "{CALL usp_AgregarImagenProducto(?, ?)}"
+        for url in urls:
+            cursor.execute(sql_call_sp, producto_id, url)
+
+        conn.commit()
+        return jsonify({"success": True, "message": "Imágenes agregadas con éxito."})
+
+    except Exception as e:
+        if 'conn' in locals() and conn: conn.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+    finally:
+        if 'conn' in locals() and conn: conn.close()
+
+
+# --- RUTA PARA ELIMINAR UNA IMAGEN ESPECÍFICA (DELETE) ---
+@app.route('/api/imagenes/<int:imagen_id>', methods=['DELETE'])
+@admin_required
+def eliminar_imagen(imagen_id):
+    conn = None
+    try:
+        conn = pyodbc.connect(DB_CONNECTION_STRING)
+        cursor = conn.cursor()
+
+        # 1. Obtenemos la URL de la imagen para poder borrarla de Cloudinary
+        cursor.execute("SELECT URL FROM ImagenesProducto WHERE ImagenID = ?", imagen_id)
+        row = cursor.fetchone()
+        if not row:
+            return jsonify({"success": False, "error": "Imagen no encontrada."}), 404
+        
+        # 2. Eliminamos la imagen de Cloudinary
+        public_id = extraer_public_id_de_url(row.URL)
+        if public_id:
+            cloudinary.uploader.destroy(public_id)
+
+        # 3. Eliminamos la imagen de nuestra base de datos
+        cursor.execute("{CALL usp_EliminarImagenProducto(?)}", imagen_id)
+        
+        conn.commit()
+        return jsonify({"success": True, "message": "Imagen eliminada con éxito."})
+
+    except Exception as e:
+        if conn: conn.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+    finally:
+        if conn: conn.close()
+
 # --- NUEVO ENDPOINT PARA VERIFICAR ESTADO DE AUTENTICACIÓN ---
 @app.route('/api/auth/status')
 def auth_status():

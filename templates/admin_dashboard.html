@@ -5,8 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Magknives Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    
+    <style>
+        .notification { transition: opacity 0.3s, transform 0.3s; transform: translateY(-20px); opacity: 0; pointer-events: none; }
+        .notification.show { transform: translateY(0); opacity: 1; }
+        .modal-backdrop { transition: opacity 0.3s; }
+        .modal-content { transition: transform 0.3s; transform: scale(0.95); }
+        .modal-backdrop.show .modal-content { transform: scale(1); }
+    </style>
 </head>
 <body class="bg-gray-100 font-sans">
+
+    <div id="notification" class="notification fixed top-5 right-5 z-50 p-4 rounded-md shadow-lg text-white max-w-sm"><p id="notificationMessage"></p></div>
+
+    <div id="confirmationModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full z-50 modal-backdrop">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white modal-content">
+            <div class="mt-3 text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                    <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                </div>
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mt-2">Confirmar Eliminación</h3>
+                <div class="mt-2 px-7 py-3"><p class="text-sm text-gray-500" id="confirmationMessage"></p></div>
+                <div class="items-center px-4 py-3 flex justify-center space-x-4">
+                    <button id="btnConfirm" class="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md w-1/2 shadow-sm hover:bg-red-700">Eliminar</button>
+                    <button id="btnCancelConfirm" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-1/2 shadow-sm hover:bg-gray-300">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <nav class="bg-gray-800 text-white p-4 flex justify-between items-center">
         <h1 class="text-xl font-bold">Panel de Administración de Magknives</h1>
@@ -20,12 +46,8 @@
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-3xl font-bold">Gestión de Productos</h2>
             <div class="flex space-x-4">
-                <a href="http://127.0.0.1:5500/index.html" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                    ← Regresar al Sitio
-                </a>
-                <a href="#" id="btnAbrirModalCrear" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-                    + Crear Nuevo Producto
-                </a>
+                <a href="http://127.0.0.1:5500/index.html" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">← Regresar al Sitio</a>
+                <a href="#" id="btnAbrirModalCrear" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">+ Crear Nuevo Producto</a>
             </div>
         </div>
 
@@ -43,19 +65,13 @@
                 <tbody class="bg-white divide-y divide-gray-200">
                     {% for producto in productos %}
                     <tr>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">{{ producto.nombre }}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                {{ producto.categoria }}
-                            </span>
-                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm font-medium text-gray-900">{{ producto.nombre }}</div></td>
+                        <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">{{ producto.categoria }}</span></td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">${{ "%.2f"|format(producto.precio) }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-bold {{ 'text-green-600' if producto.stock > 0 else 'text-red-600' }}">{{ producto.stock }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                            <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-4">Editar</a>
-                            <a href="#" class="text-red-600 hover:text-red-900"data-id="{{ producto.id }}" data-nombre="{{ producto.nombre }}">Eliminar</a>
+                            <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-4 btn-editar" data-id="{{ producto.id }}">Editar</a>
+                            <a href="#" class="text-red-600 hover:text-red-900 btn-eliminar" data-id="{{ producto.id }}" data-nombre="{{ producto.nombre }}">Eliminar</a>
                         </td>
                     </tr>
                     {% else %}
@@ -66,183 +82,284 @@
                 </tbody>
             </table>
         </div>
-        <div id="modalProducto" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-    <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
-        <div class="mt-3 text-center">
-            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modalTitle">Crear Nuevo Producto</h3>
-            <div class="mt-2 px-7 py-3">
-                
-                <form id="formCrearProducto" class="text-left space-y-4">
-                    <div>
-                        <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre del Producto</label>
-                        <input type="text" name="nombre" id="nombre" class="mt-1 block w-full border border-gray-300 rounded-md p-2" required>
-                    </div>
-                    <div>
-                        <label for="descripcion" class="block text-sm font-medium text-gray-700">Descripción</label>
-                        <textarea name="descripcion" id="descripcion" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md p-2"></textarea>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label for="precio" class="block text-sm font-medium text-gray-700">Precio</label>
-                            <input type="number" name="precio" id="precio" step="0.01" class="mt-1 block w-full border border-gray-300 rounded-md p-2" required>
-                        </div>
-                        <div>
-                            <label for="stock" class="block text-sm font-medium text-gray-700">Stock</label>
-                            <input type="number" name="stock" id="stock" class="mt-1 block w-full border border-gray-300 rounded-md p-2" required>
-                        </div>
-                        <div>
-                             <label for="categoria" class="block text-sm font-medium text-gray-700">Categoría</label>
-                             <input type="text" name="categoria" id="categoria" class="mt-1 block w-full border border-gray-300 rounded-md p-2" required>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="imagen" class="block text-sm font-medium text-gray-700">Imagen del Producto</label>
-                        <input type="file" name="imagen" id="imagen"  class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" required multiple>
-                    </div>
-                </form>
+    </main>
 
-            </div>
-            <div class="items-center px-4 py-3">
-                <button id="btnGuardar" class="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-green-700">
-                    Guardar Producto
-                </button>
-                 <button id="btnCancelar" class="mt-2 px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300">
-                    Cancelar
-                </button>
+    <div id="modalProducto" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modalTitle">Crear Nuevo Producto</h3>
+                <div class="mt-2 px-7 py-3">
+                    <form id="formProducto" class="text-left space-y-4">
+                        <input type="hidden" name="productoId" id="productoId">
+                        <div>
+                            <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre del Producto</label>
+                            <input type="text" name="nombre" id="nombre" class="mt-1 block w-full border border-gray-300 rounded-md p-2" required>
+                        </div>
+                        <div>
+                            <label for="descripcion" class="block text-sm font-medium text-gray-700">Descripción</label>
+                            <textarea name="descripcion" id="descripcion" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md p-2"></textarea>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div><label for="precio" class="block text-sm font-medium text-gray-700">Precio</label><input type="number" name="precio" id="precio" step="0.01" class="mt-1 block w-full border border-gray-300 rounded-md p-2" required></div>
+                            <div><label for="stock" class="block text-sm font-medium text-gray-700">Stock</label><input type="number" name="stock" id="stock" class="mt-1 block w-full border border-gray-300 rounded-md p-2" required></div>
+                            <div><label for="categoria" class="block text-sm font-medium text-gray-700">Categoría</label><input type="text" name="categoria" id="categoria" class="mt-1 block w-full border border-gray-300 rounded-md p-2" required></div>
+                        </div>
+                        <div id="contenedorImagenesActuales" class="space-y-2">
+                            <label class="block text-sm font-medium text-gray-700">Imágenes Actuales</label>
+                            </div>
+                        <div>
+                            <label for="imagen" class="block text-sm font-medium text-gray-700">Añadir Imagen(es)</label>
+                            <input type="file" name="imagen" id="imagen" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" multiple>
+                        </div>
+                    </form>
+                </div>
+                <div class="items-center px-4 py-3">
+                    <button id="btnGuardar" class="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-green-700">Guardar</button>
+                    <button id="btnCancelar" class="mt-2 px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300">Cancelar</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
-    </main>
-    
+
     <script>
-      document.addEventListener('DOMContentLoaded', () => {
-    // Referencias a los elementos del modal y formulario
+document.addEventListener('DOMContentLoaded', () => {
+    // --- REFERENCIAS A ELEMENTOS DEL DOM ---
     const modal = document.getElementById('modalProducto');
-    const btnAbrirModal = document.getElementById('btnAbrirModalCrear');
-    const btnCancelar = document.getElementById('btnCancelar');
-    const btnGuardar = document.getElementById('btnGuardar');
-    const form = document.getElementById('formCrearProducto');
-
-    // Función para mostrar/ocultar el modal
-    const toggleModal = () => modal.classList.toggle('hidden');
-
-    btnAbrirModal.addEventListener('click', toggleModal);
-    btnCancelar.addEventListener('click', toggleModal);
-
-    // Lógica para guardar el producto
-    btnGuardar.addEventListener('click', async () => {
+    const form = document.getElementById('formProducto');
+    const modalTitle = document.getElementById('modalTitle');
+    const productoIdInput = document.getElementById('productoId');
     const imagenInput = document.getElementById('imagen');
-    const archivosImagenes = imagenInput.files;
+    const contenedorImagenesActuales = document.getElementById('contenedorImagenesActuales');
+    const notification = document.getElementById('notification');
+    const notificationMessage = document.getElementById('notificationMessage');
+    const confirmationModal = document.getElementById('confirmationModal');
+    const confirmationMessage = document.getElementById('confirmationMessage');
+    const btnConfirm = document.getElementById('btnConfirm');
+    const btnCancelConfirm = document.getElementById('btnCancelConfirm');
+    const btnGuardar = document.getElementById('btnGuardar');
 
-    if (!form.checkValidity() || archivosImagenes.length === 0) {
-        alert('Por favor, completa todos los campos requeridos y selecciona al menos una imagen.');
-        return;
-    }
+    // --- FUNCIONES DE UI (NOTIFICACIONES Y MODALES) ---
+    const showNotification = (message, type = 'success') => {
+        notificationMessage.textContent = message;
+        notification.className = 'notification fixed top-5 right-5 z-50 p-4 rounded-md shadow-lg text-white max-w-sm';
+        notification.classList.add(type === 'success' ? 'bg-green-500' : 'bg-red-500');
+        notification.classList.add('show');
+        setTimeout(() => notification.classList.remove('show'), 3000);
+    };
 
-    btnGuardar.textContent = 'Subiendo imágenes...';
-    btnGuardar.disabled = true;
-
-    try {
-        // 1. Creamos un array de promesas, una por cada imagen a subir.
-        const promesasDeSubida = Array.from(archivosImagenes).map(archivo => {
-            const formDataImagen = new FormData();
-            formDataImagen.append('file', archivo);
-
-            return fetch('/api/upload-image', {
-                method: 'POST',
-                body: formDataImagen,
-                credentials: 'include'
-            }).then(res => res.json());
+    const showConfirmation = (message) => {
+        return new Promise((resolve) => {
+            confirmationMessage.textContent = message;
+            confirmationModal.classList.remove('hidden');
+            confirmationModal.classList.add('show');
+            btnConfirm.onclick = () => { confirmationModal.classList.add('hidden'); confirmationModal.classList.remove('show'); resolve(true); };
+            btnCancelConfirm.onclick = () => { confirmationModal.classList.add('hidden'); confirmationModal.classList.remove('show'); resolve(false); };
         });
-        
-        // 2. Promise.all() espera a que TODAS las imágenes se hayan subido.
-        const resultadosDeSubida = await Promise.all(promesasDeSubida);
+    };
 
-        // 3. Recolectamos todas las URLs de las imágenes subidas.
-        const imagenes_urls = resultadosDeSubida.map(res => {
-            if (!res.success) throw new Error(res.error || 'Una de las imágenes falló al subir.');
-            return res.image_url;
-        });
+    const closeModal = () => modal.classList.add('hidden');
 
-        btnGuardar.textContent = 'Guardando producto...';
+    // --- FUNCIONES PARA ABRIR EL MODAL (MODO CREAR / EDITAR) ---
+    const openCreateModal = () => {
+        form.reset();
+        productoIdInput.value = '';
+        modalTitle.textContent = 'Crear Nuevo Producto';
+        imagenInput.required = true;
+        contenedorImagenesActuales.innerHTML = ''; // Ocultar la sección de imágenes actuales
+        modal.classList.remove('hidden');
+    };
 
-        // 4. Crear el producto con el ARRAY de URLs de imágenes.
-        const datosProducto = {
-            nombre: form.nombre.value,
-            descripcion: form.descripcion.value,
-            precio: parseFloat(form.precio.value),
-            stock: parseInt(form.stock.value),
-            categoria: form.categoria.value,
-            imagenes_urls: imagenes_urls // ¡Ahora es un array!
-        };
+    const openEditModal = async (id) => {
+        form.reset();
+        productoIdInput.value = id;
+        modalTitle.textContent = `Editando Producto ID: ${id}`;
+        imagenInput.required = false;
+        contenedorImagenesActuales.innerHTML = '<label class="block text-sm font-medium text-gray-700">Imágenes Actuales</label>';
 
-        const resProducto = await fetch('/api/productos', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(datosProducto),
-            credentials: 'include'
-        });
-        const dataProducto = await resProducto.json();
+        try {
+            const res = await fetch(`/api/productos/${id}`, { credentials: 'include' });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error);
 
-        if (dataProducto.success) {
-            alert('¡Producto creado con éxito!');
-            location.reload();
-        } else {
-            throw new Error(dataProducto.error || 'Error al crear el producto.');
+            const p = data.producto;
+            form.nombre.value = p.nombre;
+            form.descripcion.value = p.descripcion;
+            form.precio.value = p.precio;
+            form.stock.value = p.stock;
+            form.categoria.value = p.categoria;
+
+            if (p.imagenes && p.imagenes.length > 0) {
+                p.imagenes.forEach(img => {
+                    const imgContainer = document.createElement('div');
+                    imgContainer.className = 'flex items-center justify-between border p-2 rounded';
+                    imgContainer.innerHTML = `
+                        <img src="${img.url}" alt="Imagen actual" class="h-12 w-12 object-cover rounded">
+                        <span class="text-xs truncate mx-2">${img.url.split('/').pop()}</span>
+                        <button type="button" class="text-red-500 hover:text-red-700 font-bold btn-eliminar-imagen" data-imagen-id="${img.id}">X</button>
+                    `;
+                    contenedorImagenesActuales.appendChild(imgContainer);
+                });
+            } else {
+                contenedorImagenesActuales.innerHTML += '<p class="text-xs text-gray-500">Este producto no tiene imágenes.</p>';
+            }
+            modal.classList.remove('hidden');
+        } catch (error) {
+            showNotification(`Error al cargar datos: ${error.message}`, 'error');
         }
+    };
 
-    } catch (error) {
-        alert(`Ocurrió un error: ${error.message}`);
-        btnGuardar.textContent = 'Guardar Producto';
-        btnGuardar.disabled = false;
-    }
-});
+    // --- EVENT LISTENERS DE LA PÁGINA ---
 
-// --- LÓGICA PARA LOS BOTONES DE ELIMINAR ---
-const botonesEliminar = document.querySelectorAll('.btn-eliminar');
+    // Botones principales del modal
+    document.getElementById('btnAbrirModalCrear').addEventListener('click', openCreateModal);
+    document.getElementById('btnCancelar').addEventListener('click', closeModal);
 
-botonesEliminar.forEach(boton => {
-    boton.addEventListener('click', async (e) => {
-        e.preventDefault();
+    // Botón Guardar (lógica principal para Crear y Editar)
+    btnGuardar.addEventListener('click', async () => {
+        const productoId = productoIdInput.value;
+        const esModoEdicion = !!productoId;
 
-        const productoId = boton.dataset.id;
-        const productoNombre = boton.dataset.nombre;
-
-        // ¡Importante! Pedimos confirmación antes de borrar.
-        if (!confirm(`¿Estás seguro de que quieres eliminar el producto "${productoNombre}"?`)) {
+        if (!form.checkValidity() || (!esModoEdicion && imagenInput.files.length === 0)) {
+            showNotification('Por favor, completa todos los campos requeridos.', 'error');
             return;
         }
 
+        btnGuardar.textContent = 'Guardando...';
+        btnGuardar.disabled = true;
+
         try {
-            const respuesta = await fetch(`/api/productos/${productoId}`, {
-                method: 'DELETE',
-                credentials: 'include'
-            });
+            const datosProducto = {
+                nombre: form.nombre.value,
+                descripcion: form.descripcion.value,
+                precio: parseFloat(form.precio.value),
+                stock: parseInt(form.stock.value),
+                categoria: form.categoria.value,
+            };
 
-            const data = await respuesta.json();
+            if (esModoEdicion) {
+                if (imagenInput.files.length > 0) {
+                    btnGuardar.textContent = 'Subiendo nuevas imágenes...';
+                    const promesas = Array.from(imagenInput.files).map(file => {
+                        const formData = new FormData();
+                        formData.append('file', file);
+                        return fetch('/api/upload-image', { method: 'POST', body: formData, credentials: 'include' }).then(res => res.json());
+                    });
+                    const resultados = await Promise.all(promesas);
+                    const urls = resultados.map(res => {
+                        if (!res.success) throw new Error(res.error || 'Una imagen falló al subir.');
+                        return res.image_url;
+                    });
+                    await fetch(`/api/productos/${productoId}/imagenes`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ imagenes_urls: urls }),
+                        credentials: 'include'
+                    });
+                }
 
-            if (data.success) {
-                alert('¡Producto eliminado con éxito!');
-                location.reload(); // Recargamos la página para actualizar la tabla
+                btnGuardar.textContent = 'Actualizando datos...';
+                const res = await fetch(`/api/productos/${productoId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datosProducto),
+                    credentials: 'include'
+                });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
+                showNotification('¡Producto actualizado con éxito!');
             } else {
-                throw new Error(data.error || 'No se pudo eliminar el producto.');
+                btnGuardar.textContent = 'Subiendo imágenes...';
+                const promesas = Array.from(imagenInput.files).map(file => {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    return fetch('/api/upload-image', { method: 'POST', body: formData, credentials: 'include' }).then(res => res.json());
+                });
+                const resultados = await Promise.all(promesas);
+                datosProducto.imagenes_urls = resultados.map(res => {
+                    if (!res.success) throw new Error(res.error || 'Una imagen falló.');
+                    return res.image_url;
+                });
+
+                btnGuardar.textContent = 'Guardando producto...';
+                const res = await fetch('/api/productos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datosProducto),
+                    credentials: 'include'
+                });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
+                showNotification('¡Producto creado con éxito!');
             }
+            
+            closeModal();
+            setTimeout(() => location.reload(), 1500);
+
         } catch (error) {
-            alert(`Ocurrió un error: ${error.message}`);
+            showNotification(`Ocurrió un error: ${error.message}`, 'error');
+        } finally {
+            btnGuardar.textContent = 'Guardar';
+            btnGuardar.disabled = false;
         }
+    });
+
+    // Botones de acción en la tabla (usando delegación de eventos para eficiencia)
+    document.querySelector('tbody').addEventListener('click', async (e) => {
+        const target = e.target;
+        e.preventDefault();
+
+        // Botón Editar
+        if (target.classList.contains('btn-editar')) {
+            openEditModal(target.dataset.id);
+        }
+
+        // Botón Eliminar
+        if (target.classList.contains('btn-eliminar')) {
+            const productoId = target.dataset.id;
+            const productoNombre = target.dataset.nombre;
+            const confirmado = await showConfirmation(`¿Estás seguro de que quieres eliminar "${productoNombre}"?`);
+            if (!confirmado) return;
+
+            try {
+                const res = await fetch(`/api/productos/${productoId}`, { method: 'DELETE', credentials: 'include' });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
+                showNotification('¡Producto eliminado!');
+                setTimeout(() => location.reload(), 1500);
+            } catch (error) {
+                showNotification(`Error al eliminar: ${error.message}`, 'error');
+            }
+        }
+    });
+    
+    // Botón para eliminar imágenes individuales dentro del modal
+    contenedorImagenesActuales.addEventListener('click', async (e) => {
+        if (e.target && e.target.classList.contains('btn-eliminar-imagen')) {
+            const boton = e.target;
+            const imagenId = boton.dataset.imagenId;
+            
+            if (await showConfirmation('¿Seguro que quieres eliminar esta imagen permanentemente?')) {
+                try {
+                    const res = await fetch(`/api/imagenes/${imagenId}`, { method: 'DELETE', credentials: 'include' });
+                    const data = await res.json();
+                    if (!data.success) throw new Error(data.error);
+                    
+                    showNotification('Imagen eliminada.');
+                    boton.parentElement.remove();
+                } catch (error) {
+                    showNotification(`Error: ${error.message}`, 'error');
+                }
+            }
+        }
+    });
+    
+    // Botón de Logout
+    document.getElementById('btnLogout').addEventListener('click', (e) => {
+        e.preventDefault();
+        fetch('/logout', { credentials: 'include' })
+            .then(() => location.href = 'http://127.0.0.1:5500/index.html');
     });
 });
- // Logout
-        const btnLogout = document.getElementById('btnLogout');
-        if(btnLogout) {
-            btnLogout.addEventListener('click', (e) => {
-                e.preventDefault();
-                fetch('/logout', { credentials: 'include' })
-                    .then(() => location.href = 'http://127.0.0.1:5500/index.html');
-            });
-        }
-    });
-    </script>
+</script>
 </body>
 </html>
