@@ -57,7 +57,7 @@ function actualizarEstadoHeader() {
     const btnCerrarSesion = document.getElementById('btnCerrarSesion');
 
     // Hacemos la petición a nuestro nuevo endpoint
-    fetch('http://127.0.0.1:5000/api/auth/status', {credentials: 'include',cache: 'no-cache'})
+    fetch(`${API_BASE_URL}/api/auth/status`, {credentials: 'include',cache: 'no-cache'})
         .then(response => response.json())
         .then(data => {
             if (data.is_authenticated) {
@@ -174,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
         btnCerrarSesion.addEventListener('click', (e) => {
             e.preventDefault(); // Evita que el enlace navegue
 
-            fetch('http://127.0.0.1:5000/logout', {
+            fetch(`${API_BASE_URL}/logout`, {
                 credentials: 'include' // ¡Muy importante para que envíe la cookie de sesión!
             })
             .then(res => res.json())
@@ -232,7 +232,7 @@ if (formLogin) {
         btnSubmit.disabled = true;
         errorDiv.classList.add('hidden'); // Ocultamos errores previos
 
-        fetch('http://127.0.0.1:5000/login', {
+        fetch(`${API_BASE_URL}/login`, {
             method: 'POST',
             body: formData,
             credentials: 'include' // Muy importante para enviar cookies
@@ -270,7 +270,7 @@ if (formLogin) {
             btnSubmit.innerText = "Enviando...";
             btnSubmit.disabled = true;
 
-            fetch('http://127.0.0.1:5000/contacto', {
+            fetch(`${API_BASE_URL}/contacto`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
@@ -304,7 +304,7 @@ if (formLogin) {
         btnFinalizar.addEventListener('click', (e) => {
             e.preventDefault();
             if (carrito.length > 0) {
-                fetch('http://127.0.0.1:5000/api/actualizar-stock', {
+                fetch(`${API_BASE_URL}/api/actualizar-stock`, {
                     method: 'POST',
                     credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },

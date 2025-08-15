@@ -131,7 +131,7 @@ function renderizarCatalogo(productos) {
 
 document.addEventListener("DOMContentLoaded", () => {
     if (document.getElementById("catalogoCompleto")) {
-        fetch('http://127.0.0.1:5000/api/productos')
+        fetch(`${API_BASE_URL}/api/productos`)
             .then(response => response.json())
             .then(productos => {
                 renderizarCatalogo(productos);
