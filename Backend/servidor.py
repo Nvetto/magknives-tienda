@@ -27,7 +27,7 @@ app.secret_key = os.getenv("SECRET_KEY")
 
 origins = [
     "http://127.0.0.1:5500", # Tu entorno de desarrollo local
-    "https://magknives.netlify.app/" # Tu sitio en producción
+    "https://magknives.netlify.app" # Tu sitio en producción
 ]
 
 @app.after_request
