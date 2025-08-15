@@ -16,6 +16,8 @@ import cloudinary
 import cloudinary.uploader
 import cloudinary.api
 from flask import Flask, request, jsonify
+from werkzeug.security import generate_password_hash, check_password_hash 
+
 
 load_dotenv()
 
@@ -282,6 +284,42 @@ def crear_producto():
     except Exception as e:
         if 'conn' in locals() and conn:
             conn.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+    finally:
+        if 'conn' in locals() and conn:
+            conn.close()
+
+# ---RUTA PARA REGISTRAR USUARIOS ---
+@app.route('/api/register', methods=['POST'])
+def registrar_usuario():
+    data = request.get_json()
+    nombre = data.get('nombre')
+    apellido = data.get('apellido') 
+    email = data.get('email')
+    password = data.get('password')
+
+    if not all([nombre, apellido, email, password]):
+        return jsonify({"success": False, "error": "Todos los campos son obligatorios."}), 400
+
+    hash_contrasena = generate_password_hash(password)
+
+    try:
+        conn = pyodbc.connect(DB_CONNECTION_STRING)
+        cursor = conn.cursor()
+
+        sql_call_sp = "{CALL usp_CrearUsuarioCliente(?, ?, ?, ?)}" 
+        cursor.execute(sql_call_sp, email, nombre, apellido, hash_contrasena)
+        
+        conn.commit()
+        return jsonify({"success": True, "message": "Usuario registrado con éxito."})
+
+    except pyodbc.Error as e:
+        # Capturamos el error específico de la base de datos (ej: email duplicado)
+        conn.rollback()
+        # El error de SQL Server viene en e.args[1]
+        error_message = str(e.args[1])
+        return jsonify({"success": False, "error": error_message}), 409 # 409 Conflict
+    except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
     finally:
         if 'conn' in locals() and conn:

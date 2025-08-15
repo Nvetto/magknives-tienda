@@ -164,3 +164,17 @@
     z-index: 10; /* Asegura que esté por encima de la imagen */
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Sombra sutil */
 }
+
+.notification {
+    left: 50%; 
+    transform: translateX(-50%); 
+    
+    transition: opacity 0.3s, transform 0.3s;
+    opacity: 0;
+    pointer-events: none;
+}
+.notification.show {
+    transform: translateX(-50%); 
+    opacity: 1;
+    pointer-events: auto;
+}

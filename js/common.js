@@ -17,6 +17,36 @@ function mostrarMensaje(elementoId, duracion = 2000) {
     }
 }
 
+/**
+ * Muestra una notificación flotante (toast) para éxito o error.
+ * @param {string} message 
+ * @param {string} [type='success'] 
+ */
+function showNotification(message, type = 'success') {
+    const notification = document.getElementById('notification');
+    const notificationMessage = document.getElementById('notificationMessage');
+    
+    if (!notification || !notificationMessage) return;
+
+    notificationMessage.textContent = message;
+    // Reseteamos las clases de color antes de añadir la nueva
+    notification.classList.remove('bg-green-500', 'bg-red-500');
+    
+    if (type === 'success') {
+        notification.classList.add('bg-green-500');
+    } else {
+        notification.classList.add('bg-red-500');
+    }
+    
+    notification.classList.add('show');
+    
+    // La notificación se oculta después de 3 segundos
+    setTimeout(() => {
+        notification.classList.remove('show');
+    }, 3000);
+}
+
+
 // =======================================================================
 //  2. LÓGICA DEL CARRITO DE COMPRAS
 // =======================================================================
@@ -161,7 +191,7 @@ function generarEnlaceWhatsapp() {
 
 
 // =======================================================================
-//  3. CÓDIGO DE INICIALIZACIÓN (EVENT LISTENERS)
+//  3. INICIALIZACIÓN (EVENT LISTENERS)
 // =======================================================================
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -324,6 +354,76 @@ if (formLogin) {
                 })
                 .catch(() => alert('Error de conexión al actualizar stock.'));
             }
+        });
+    }
+// --- LÓGICA PARA REGISTRO Y TOGGLE DE FORMULARIOS ---
+    const formContainerLogin = document.getElementById('formContainerLogin');
+    const formContainerRegister = document.getElementById('formContainerRegister');
+    const showRegisterLink = document.getElementById('showRegister');
+    const showLoginLink = document.getElementById('showLogin');
+    const registerForm = document.getElementById('registerForm');
+    const registerErrorDiv = document.getElementById('registerError');
+
+    // Event listener para mostrar el formulario de registro
+    if (showRegisterLink) {
+        showRegisterLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            formContainerLogin.classList.add('hidden');
+            formContainerRegister.classList.remove('hidden');
+        });
+    }
+
+    // Event listener para mostrar el formulario de login
+    if (showLoginLink) {
+        showLoginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            formContainerRegister.classList.add('hidden');
+            formContainerLogin.classList.remove('hidden');
+        });
+    }
+
+    // Event listener para el envío del formulario de registro
+    if (registerForm) {
+        registerForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const btnSubmit = registerForm.querySelector('button[type="submit"]');
+            btnSubmit.textContent = 'Registrando...';
+            btnSubmit.disabled = true;
+            registerErrorDiv.classList.add('hidden');
+
+            const formData = {
+                nombre: registerForm.nombre.value,
+                apellido: registerForm.apellido.value,
+                email: registerForm.email.value,
+                password: registerForm.password.value,
+            };
+
+            fetch(`${API_BASE_URL}/api/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData),
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('¡Usuario registrado con éxito! Ahora puedes iniciar sesión.');
+                    // Cambiamos al formulario de login para que el usuario pueda entrar
+                    showLoginLink.click();
+                    registerForm.reset();
+                } else {
+                    registerErrorDiv.textContent = data.error || 'Ocurrió un error desconocido.';
+                    registerErrorDiv.classList.remove('hidden');
+                }
+            })
+            .catch(err => {
+                console.error('Error en el registro:', err);
+                registerErrorDiv.textContent = 'No se pudo conectar con el servidor.';
+                registerErrorDiv.classList.remove('hidden');
+            })
+            .finally(() => {
+                btnSubmit.textContent = 'Registrarse';
+                btnSubmit.disabled = false;
+            });
         });
     }
 });
