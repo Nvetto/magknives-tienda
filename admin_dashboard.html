@@ -224,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
         contenedorImagenesActuales.innerHTML = '<label class="block text-sm font-medium text-gray-700">Imágenes Actuales</label>';
 
         try {
-            const res = await fetch(`/api/productos/${id}`, { credentials: 'include' });
+            const res = await fetch(`${API_BASE_URL}/api/productos/${id}`, { credentials: 'include' });
             const data = await res.json();
             if (!data.success) throw new Error(data.error);
 
@@ -296,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (!res.success) throw new Error(res.error || 'Una imagen falló al subir.');
                         return res.image_url;
                     });
-                    await fetch(`/api/productos/${productoId}/imagenes`, {
+                    await fetch(`${API_BASE_URL}/api/productos/${productoId}/imagenes`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ imagenes_urls: urls }),
@@ -305,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 btnGuardar.textContent = 'Actualizando datos...';
-                const res = await fetch(`/api/productos/${productoId}`, {
+                const res = await fetch(`${API_BASE_URL}/api/productos/${productoId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(datosProducto),
@@ -319,7 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const promesas = Array.from(imagenInput.files).map(file => {
                     const formData = new FormData();
                     formData.append('file', file);
-                    return fetch('/api/upload-image', { method: 'POST', body: formData, credentials: 'include' }).then(res => res.json());
+                    return fetch(`${API_BASE_URL}/api/upload-image`, { method: 'POST', body: formData, credentials: 'include' }).then(res => res.json());
                 });
                 const resultados = await Promise.all(promesas);
                 datosProducto.imagenes_urls = resultados.map(res => {
@@ -328,7 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 btnGuardar.textContent = 'Guardando producto...';
-                const res = await fetch('/api/productos', {
+                const res = await fetch(`${API_BASE_URL}/api/productos`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(datosProducto),
@@ -368,7 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!confirmado) return;
 
             try {
-                const res = await fetch(`/api/productos/${productoId}`, { method: 'DELETE', credentials: 'include' });
+                const res = await fetch(`${API_BASE_URL}/api/productos/${productoId}`, { method: 'DELETE', credentials: 'include' });
                 const data = await res.json();
                 if (!data.success) throw new Error(data.error);
                 showNotification('¡Producto eliminado!');
@@ -387,7 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (await showConfirmation('¿Seguro que quieres eliminar esta imagen permanentemente?')) {
                 try {
-                    const res = await fetch(`/api/imagenes/${imagenId}`, { method: 'DELETE', credentials: 'include' });
+                    const res = await fetch(`${API_BASE_URL}/api/imagenes/${imagenId}`, { method: 'DELETE', credentials: 'include' });
                     const data = await res.json();
                     if (!data.success) throw new Error(data.error);
                     
@@ -403,10 +403,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Botón de Logout
     document.getElementById('btnLogout').addEventListener('click', (e) => {
         e.preventDefault();
-        fetch('/logout', { credentials: 'include' })
+        fetch(`${API_BASE_URL}/logout`, { credentials: 'include' })
             .then(() => location.href = 'http://127.0.0.1:5500/index.html');
     });
 });
 </script>
+ <script src="js/config.js"></script>
 </body>
 </html>
