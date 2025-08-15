@@ -1,5 +1,5 @@
 // Detectamos si estamos en el entorno local o en producción (Netlify)
-const esEntornoLocal = window.location.hostname === '127.0.0.1';
+const esEntornoLocal = ['127.0.0.1', 'localhost'].includes(window.location.hostname);
 
 // Definimos la URL del backend según el entorno
 const API_BASE_URL = esEntornoLocal 
