@@ -217,7 +217,7 @@
 .btn-instagram {
     background: #d6249f;
     background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%,#d6249f 60%,#285AEB 90%); /* Gradiente de Instagram */
-    bottom: 95px; /* Posición del botón superior (20px base + 60px del botón de abajo + 15px de espacio) */
+    bottom: calc(20px + 60px + 15px); /* Posición del botón superior (20px base + 60px del botón de abajo + 15px de espacio) */
 }
 
 /* Ajustes para móviles */
@@ -234,6 +234,6 @@
     }
 
     .btn-instagram {
-        bottom: 75px; /* 15px base + 50px del botón de abajo + 10px de espacio */
+        bottom: calc(15px + 50px + 10px); /* 15px base + 50px del botón de abajo + 10px de espacio */
     }
 }
