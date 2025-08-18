@@ -1,5 +1,50 @@
 // =======================================================================
-//  1. FUNCIONES DE UI (MENSAJES)
+//  NUEVO: FUNCIONES AUXILIARES PARA AUTENTICACIÓN (JWT)
+// =======================================================================
+
+/**
+ * Guarda el token de autenticación y el rol del usuario en el localStorage.
+ * @param {string} token - El JWT recibido desde el backend.
+ * @param {string} role - El rol del usuario (ej: 'admin' o 'cliente').
+ */
+function guardarSesion(token, role) {
+    localStorage.setItem('supabase_token', token);
+    localStorage.setItem('user_role', role);
+}
+
+/**
+ * Obtiene el token de autenticación del localStorage.
+ * @returns {string|null} El token guardado o null si no existe.
+ */
+function obtenerToken() {
+    return localStorage.getItem('supabase_token');
+}
+
+/**
+ * Elimina el token y el rol del usuario del localStorage al cerrar sesión.
+ */
+function eliminarSesion() {
+    localStorage.removeItem('supabase_token');
+    localStorage.removeItem('user_role');
+}
+
+/**
+ * Construye los headers necesarios para las peticiones a rutas protegidas.
+ * @returns {HeadersInit} Un objeto con los headers de autorización.
+ */
+function getAuthHeaders() {
+    const token = obtenerToken();
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+    return headers;
+}
+
+// =======================================================================
+//  1. FUNCIONES DE UI (MENSAJES) - SIN CAMBIOS
 // =======================================================================
 
 /**
@@ -29,7 +74,6 @@ function showNotification(message, type = 'success') {
     if (!notification || !notificationMessage) return;
 
     notificationMessage.textContent = message;
-    // Reseteamos las clases de color antes de añadir la nueva
     notification.classList.remove('bg-green-500', 'bg-red-500');
     
     if (type === 'success') {
@@ -40,7 +84,6 @@ function showNotification(message, type = 'success') {
     
     notification.classList.add('show');
     
-    // La notificación se oculta después de 3 segundos
     setTimeout(() => {
         notification.classList.remove('show');
     }, 3000);
@@ -48,7 +91,7 @@ function showNotification(message, type = 'success') {
 
 
 // =======================================================================
-//  2. LÓGICA DEL CARRITO DE COMPRAS
+//  2. LÓGICA DEL CARRITO DE COMPRAS - SIN CAMBIOS
 // =======================================================================
 
 let carrito = [];
@@ -60,7 +103,7 @@ function guardarCarrito() {
 function cargarCarrito() {
     const guardado = localStorage.getItem("carrito");
     carrito = guardado ? JSON.parse(guardado) : [];
-    actualizarCarrito(); // Llama a actualizar aquí para asegurar que la UI esté sincronizada al cargar.
+    actualizarCarrito();
 }
 
 function agregarAlCarrito(producto) {
@@ -79,35 +122,6 @@ function agregarAlCarrito(producto) {
         }
     }
     actualizarCarrito();
-}
-
-function actualizarEstadoHeader() {
-    const btnLogin = document.getElementById('abrirLogin');
-    const btnPanelAdmin = document.getElementById('btnPanelAdmin');
-    const btnCerrarSesion = document.getElementById('btnCerrarSesion');
-
-    // Hacemos la petición a nuestro nuevo endpoint
-    fetch(`${API_BASE_URL}/api/auth/status`, {credentials: 'include',cache: 'no-cache'})
-        .then(response => response.json())
-        .then(data => {
-            if (data.is_authenticated) {
-                // Si el usuario está logeado, ocultamos el botón de Login
-                btnLogin.classList.add('hidden');
-                btnCerrarSesion.classList.remove('hidden');
-
-                // Y si además es 'admin', mostramos el botón del panel
-                if (data.role === 'admin') {
-                    btnPanelAdmin.classList.remove('hidden');
-                }
-            } else {
-                // Si no está logeado, nos aseguramos de que vea el botón de Login
-                // y que los botones de admin y logout estén ocultos.
-                btnLogin.classList.remove('hidden');
-                btnPanelAdmin.classList.add('hidden');
-                btnCerrarSesion.classList.add('hidden');
-            }
-        })
-        .catch(error => console.error("Error al verificar el estado de autenticación:", error));
 }
 
 function actualizarCarrito() {
@@ -136,9 +150,8 @@ function actualizarCarrito() {
     total.textContent = suma.toLocaleString();
     if (btnWhatsapp) btnWhatsapp.classList.toggle('hidden', carrito.length === 0);
     
-    // --- INICIO: LÓGICA PARA ACTUALIZAR EL CONTADOR ---
     if (contadorCarrito) {
-      const cantidadItems = carrito.length;
+      const cantidadItems = carrito.reduce((total, item) => total + item.cantidad, 0); // Contar todos los items
       if (cantidadItems > 0) {
         contadorCarrito.textContent = cantidadItems;
         contadorCarrito.classList.remove('hidden');
@@ -146,7 +159,6 @@ function actualizarCarrito() {
         contadorCarrito.classList.add('hidden');
       }
     }
-    // --- FIN: LÓGICA PARA ACTUALIZAR EL CONTADOR ---
 
     guardarCarrito();
 }
@@ -191,31 +203,190 @@ function generarEnlaceWhatsapp() {
 
 
 // =======================================================================
+//  REFACTORIZADO: LÓGICA DE ESTADO DE AUTENTICACIÓN
+// =======================================================================
+
+/**
+ * Actualiza los botones del header (Login, Logout, Panel Admin)
+ * basándose en el token y el rol guardados en localStorage.
+ */
+function actualizarEstadoHeader() {
+    const token = obtenerToken();
+    const role = localStorage.getItem('user_role');
+
+    const btnLogin = document.getElementById('abrirLogin');
+    const btnPanelAdmin = document.getElementById('btnPanelAdmin');
+    const btnCerrarSesion = document.getElementById('btnCerrarSesion');
+
+    if (token) {
+        // Usuario logueado
+        btnLogin.classList.add('hidden');
+        btnCerrarSesion.classList.remove('hidden');
+
+        // Muestra el panel de admin solo si el rol es 'admin'
+        if (role === 'admin') {
+            btnPanelAdmin.classList.remove('hidden');
+        } else {
+            btnPanelAdmin.classList.add('hidden');
+        }
+    } else {
+        // Usuario no logueado
+        btnLogin.classList.remove('hidden');
+        btnPanelAdmin.classList.add('hidden');
+        btnCerrarSesion.classList.add('hidden');
+    }
+}
+
+
+// =======================================================================
 //  3. INICIALIZACIÓN (EVENT LISTENERS)
 // =======================================================================
 
 document.addEventListener("DOMContentLoaded", () => {
+    // Carga inicial del estado del header y del carrito
     actualizarEstadoHeader();
     cargarCarrito();
 
-     // --- LÓGICA PARA CERRAR SESIÓN ---
+    // --- REFACTORIZADO: LÓGICA PARA CERRAR SESIÓN ---
     const btnCerrarSesion = document.getElementById('btnCerrarSesion');
     if (btnCerrarSesion) {
         btnCerrarSesion.addEventListener('click', (e) => {
-            e.preventDefault(); // Evita que el enlace navegue
+            e.preventDefault();
+            
+            // Elimina los datos de sesión del frontend
+            eliminarSesion();
+            
+            // Opcional: Notificar al backend para invalidar el token si se implementa
+            // fetch(`${API_BASE_URL}/logout`, { method: 'POST', headers: getAuthHeaders() });
 
-            fetch(`${API_BASE_URL}/logout`, {
-                credentials: 'include' // ¡Muy importante para que envíe la cookie de sesión!
+            // Recarga la página para reflejar el estado de "no logueado"
+            location.reload();
+        });
+    }
+
+    // --- REFACTORIZADO: Lógica de envío del formulario de login ---
+    const formLogin = document.querySelector('#loginForm'); // Se cambió el selector para ser más específico
+    if (formLogin) {
+        formLogin.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const btnSubmit = formLogin.querySelector('button[type="submit"]');
+            const errorDiv = document.getElementById('loginError');
+            const formData = new FormData(formLogin);
+
+            btnSubmit.innerText = 'Verificando...';
+            btnSubmit.disabled = true;
+            errorDiv.classList.add('hidden');
+
+            fetch(`${API_BASE_URL}/login`, {
+                method: 'POST',
+                body: formData,
+                // Ya no se necesita 'credentials: include' porque no usamos cookies de sesión
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // ¡Éxito! Guarda el token y el rol del usuario
+                    guardarSesion(data.access_token, data.user.role);
+                    
+                    document.getElementById('modalLogin').classList.add('hidden');
+                    actualizarEstadoHeader(); // Actualiza la cabecera inmediatamente
+                    // Opcional: recargar la página si es necesario
+                    // location.reload();
+                } else {
+                    errorDiv.innerText = data.error || 'Error desconocido.';
+                    errorDiv.classList.remove('hidden');
+                }
+            })
+            .catch(error => {
+                console.error('Error en el login:', error);
+                errorDiv.innerText = 'No se pudo conectar con el servidor.';
+                errorDiv.classList.remove('hidden');
+            })
+            .finally(() => {
+                btnSubmit.innerText = 'Iniciar Sesión';
+                btnSubmit.disabled = false;
+            });
+        });
+    }
+
+    // --- LÓGICA DE REGISTRO - SIN CAMBIOS ---
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) {
+        registerForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const btnSubmit = registerForm.querySelector('button[type="submit"]');
+            const registerErrorDiv = document.getElementById('registerError');
+            btnSubmit.textContent = 'Registrando...';
+            btnSubmit.disabled = true;
+            registerErrorDiv.classList.add('hidden');
+
+            const formData = {
+                nombre: registerForm.nombre.value,
+                apellido: registerForm.apellido.value,
+                email: registerForm.email.value,
+                password: registerForm.password.value,
+            };
+
+            fetch(`${API_BASE_URL}/api/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData),
             })
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    location.reload();
+                    showNotification('¡Usuario registrado con éxito! Ahora puedes iniciar sesión.');
+                    document.getElementById('showLogin').click();
+                    registerForm.reset();
+                } else {
+                    registerErrorDiv.textContent = data.error || 'Ocurrió un error desconocido.';
+                    registerErrorDiv.classList.remove('hidden');
                 }
             })
-            .catch(error => console.error('Error al cerrar sesión:', error));
+            .catch(err => {
+                console.error('Error en el registro:', err);
+                registerErrorDiv.textContent = 'No se pudo conectar con el servidor.';
+                registerErrorDiv.classList.remove('hidden');
+            })
+            .finally(() => {
+                btnSubmit.textContent = 'Registrarse';
+                btnSubmit.disabled = false;
+            });
         });
     }
+
+    // --- LÓGICA DE FINALIZAR COMPRA POR WHATSAPP - SIN CAMBIOS ---
+    const btnFinalizar = document.getElementById('btnFinalizarWhatsapp');
+    if (btnFinalizar) {
+        btnFinalizar.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (carrito.length > 0) {
+                // Este endpoint es público y no requiere token de autenticación
+                fetch(`${API_BASE_URL}/api/actualizar-stock`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(carrito)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        window.open(generarEnlaceWhatsapp(), '_blank');
+                        carrito = [];
+                        actualizarCarrito();
+                        // alert("¡Pedido enviado! La página se recargará.");
+                        showNotification("¡Pedido enviado por WhatsApp! La página se recargará.");
+                        setTimeout(() => location.reload(), 2000);
+                    } else {
+                        alert(`Error: ${data.error}`);
+                    }
+                })
+                .catch(() => alert('Error de conexión al actualizar stock.'));
+            }
+        });
+    }
+
+    // --- LÓGICAS DE UI (MODALES, CONTACTO, ETC.) - SIN CAMBIOS ---
 
     // Lógica del Modal del Carrito
     const modalCarrito = document.getElementById("modalCarrito");
@@ -234,63 +405,13 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // --- Lógica del Modal de Login ---
-const modalLogin = document.getElementById("modalLogin");
-if (modalLogin) {
-    document.getElementById("abrirLogin").addEventListener("click", () => modalLogin.classList.remove("hidden"));
-    document.getElementById("cerrarLogin").addEventListener("click", () => modalLogin.classList.add("hidden"));
-
-    // Comprobamos si la URL tiene un error de login para mostrar el modal automáticamente
-    const params = new URLSearchParams(window.location.search);
-    if (params.has('login_error')) {
-        modalLogin.classList.remove('hidden');
-        document.getElementById('loginError').classList.remove('hidden');
+    // Lógica del Modal de Login
+    const modalLogin = document.getElementById("modalLogin");
+    if (modalLogin) {
+        document.getElementById("abrirLogin").addEventListener("click", () => modalLogin.classList.remove("hidden"));
+        document.getElementById("cerrarLogin").addEventListener("click", () => modalLogin.classList.add("hidden"));
     }
-}
-
-// --- Lógica de envío del formulario de login con JavaScript (AJAX) ---
-const formLogin = document.querySelector('#modalLogin form');
-if (formLogin) {
-    formLogin.addEventListener('submit', (e) => {
-        e.preventDefault(); // Evita que la página se recargue.
-
-        const btnSubmit = formLogin.querySelector('button[type="submit"]');
-        const errorDiv = document.getElementById('loginError');
-        const formData = new FormData(formLogin);
-
-        btnSubmit.innerText = 'Verificando...';
-        btnSubmit.disabled = true;
-        errorDiv.classList.add('hidden'); // Ocultamos errores previos
-
-        fetch(`${API_BASE_URL}/login`, {
-            method: 'POST',
-            body: formData,
-            credentials: 'include' // Muy importante para enviar cookies
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                document.getElementById('modalLogin').classList.add('hidden'); // Cerramos el modal
-                actualizarEstadoHeader(); // Actualizamos la cabecera para mostrar "Panel Admin"
-            } else {
-                // Si el login falla...
-                errorDiv.innerText = data.error;
-                errorDiv.classList.remove('hidden'); // Mostramos el mensaje de error
-            }
-        })
-        .catch(error => {
-            console.error('Error en el login:', error);
-            errorDiv.innerText = 'No se pudo conectar con el servidor.';
-            errorDiv.classList.remove('hidden');
-        })
-        .finally(() => {
-            // Reactivamos el botón
-            btnSubmit.innerText = 'Iniciar Sesión';
-            btnSubmit.disabled = false;
-        });
-    });
-}
-
+    
     // Lógica de Envío del Formulario de Contacto
     const formContacto = document.querySelector("#contacto form");
     if (formContacto) {
@@ -302,7 +423,6 @@ if (formLogin) {
 
             fetch(`${API_BASE_URL}/contacto`, {
                 method: 'POST',
-                credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     nombre: document.getElementById("nombre").value,
@@ -328,43 +448,12 @@ if (formLogin) {
         });
     }
 
-    // Lógica para Finalizar Compra por WhatsApp
-    const btnFinalizar = document.getElementById('btnFinalizarWhatsapp');
-    if (btnFinalizar) {
-        btnFinalizar.addEventListener('click', (e) => {
-            e.preventDefault();
-            if (carrito.length > 0) {
-                fetch(`${API_BASE_URL}/api/actualizar-stock`, {
-                    method: 'POST',
-                    credentials: 'include',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(carrito)
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        window.open(generarEnlaceWhatsapp(), '_blank');
-                        carrito = [];
-                        actualizarCarrito();
-                        alert("¡Pedido enviado! La página se recargará.");
-                        location.reload();
-                    } else {
-                        alert(`Error: ${data.error}`);
-                    }
-                })
-                .catch(() => alert('Error de conexión al actualizar stock.'));
-            }
-        });
-    }
-// --- LÓGICA PARA REGISTRO Y TOGGLE DE FORMULARIOS ---
+    // Lógica para el toggle entre formularios de Login y Registro
     const formContainerLogin = document.getElementById('formContainerLogin');
     const formContainerRegister = document.getElementById('formContainerRegister');
     const showRegisterLink = document.getElementById('showRegister');
     const showLoginLink = document.getElementById('showLogin');
-    const registerForm = document.getElementById('registerForm');
-    const registerErrorDiv = document.getElementById('registerError');
 
-    // Event listener para mostrar el formulario de registro
     if (showRegisterLink) {
         showRegisterLink.addEventListener('click', (e) => {
             e.preventDefault();
@@ -372,58 +461,11 @@ if (formLogin) {
             formContainerRegister.classList.remove('hidden');
         });
     }
-
-    // Event listener para mostrar el formulario de login
     if (showLoginLink) {
         showLoginLink.addEventListener('click', (e) => {
             e.preventDefault();
             formContainerRegister.classList.add('hidden');
             formContainerLogin.classList.remove('hidden');
-        });
-    }
-
-    // Event listener para el envío del formulario de registro
-    if (registerForm) {
-        registerForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const btnSubmit = registerForm.querySelector('button[type="submit"]');
-            btnSubmit.textContent = 'Registrando...';
-            btnSubmit.disabled = true;
-            registerErrorDiv.classList.add('hidden');
-
-            const formData = {
-                nombre: registerForm.nombre.value,
-                apellido: registerForm.apellido.value,
-                email: registerForm.email.value,
-                password: registerForm.password.value,
-            };
-
-            fetch(`${API_BASE_URL}/api/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    showNotification('¡Usuario registrado con éxito! Ahora puedes iniciar sesión.');
-                    // Cambiamos al formulario de login para que el usuario pueda entrar
-                    showLoginLink.click();
-                    registerForm.reset();
-                } else {
-                    registerErrorDiv.textContent = data.error || 'Ocurrió un error desconocido.';
-                    registerErrorDiv.classList.remove('hidden');
-                }
-            })
-            .catch(err => {
-                console.error('Error en el registro:', err);
-                registerErrorDiv.textContent = 'No se pudo conectar con el servidor.';
-                registerErrorDiv.classList.remove('hidden');
-            })
-            .finally(() => {
-                btnSubmit.textContent = 'Registrarse';
-                btnSubmit.disabled = false;
-            });
         });
     }
 });

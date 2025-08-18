@@ -342,8 +342,21 @@
                 const confirmado = await showConfirmation(`¿Estás seguro de que quieres eliminar "${productoNombre}"?`);
                 if (!confirmado) return;
 
+                function getAuthHeaders() {
+                    const token = localStorage.getItem('supabase_token');
+                    if (!token) return { 'Content-Type': 'application/json' };
+                    return {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    };
+                }
+
                 try {
-                    const res = await fetch(`${API_BASE_URL}/api/productos/${productoId}`, { method: 'DELETE', credentials: 'include' });
+                    try {
+                    const res = await fetch(`${API_BASE_URL}/api/productos/${productoId}`, {
+                        method: 'DELETE',
+                        headers: getAuthHeaders() // ¡Este es el cambio crucial!
+                    });
                     const data = await res.json();
                     if (!data.success) throw new Error(data.error);
                     showNotification('¡Producto eliminado!');
@@ -359,8 +372,19 @@
             if (boton && boton.classList.contains('btn-eliminar-imagen')) {
                 const imagenId = boton.dataset.imagenId;
                 if (await showConfirmation('¿Seguro que quieres eliminar esta imagen permanentemente?')) {
+                    function getAuthHeaders() {
+                    const token = localStorage.getItem('supabase_token');
+                    if (!token) return { 'Content-Type': 'application/json' };
+                    return {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    };
+                }
                     try {
-                        const res = await fetch(`${API_BASE_URL}/api/imagenes/${imagenId}`, { method: 'DELETE', credentials: 'include' });
+                    const res = await fetch(`${API_BASE_URL}/api/productos/${productoId}`, {
+                        method: 'DELETE',
+                        headers: getAuthHeaders() // ¡Este es el cambio crucial!
+                    });
                         const data = await res.json();
                         if (!data.success) throw new Error(data.error);
                         
