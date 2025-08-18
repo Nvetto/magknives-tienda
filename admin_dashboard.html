@@ -37,7 +37,7 @@
     <nav class="bg-gray-800 text-white p-4 flex justify-between items-center">
         <h1 class="text-xl font-bold">Panel de Administración de Magknives</h1>
         <div>
-            <span class="mr-4">Hola, <span id="nombreUsuarioSpan">...</span></span>
+            <a href="index.html" target="_blank" class="text-blue-300 hover:text-blue-400 mr-4">Ver Sitio</a>
             <a href="#" id="btnLogout" class="bg-red-600 hover:bg-red-700 px-3 py-2 rounded">Cerrar Sesión</a>
         </div>
     </nav>
@@ -45,10 +45,7 @@
     <main class="container mx-auto p-8">
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-3xl font-bold">Gestión de Productos</h2>
-            <div class="flex space-x-4">
-                <a href="index.html" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">← Regresar al Sitio</a>
-                <a href="#" id="btnAbrirModalCrear" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">+ Crear Nuevo Producto</a>
-            </div>
+            <button id="btnAbrirModalCrear" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">+ Crear Nuevo Producto</button>
         </div>
 
         <div class="bg-white shadow-md rounded-lg overflow-x-auto">
@@ -70,8 +67,8 @@
 
     <div id="modalProducto" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-40">
         <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
-            <div class="mt-3 text-center">
-                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modalTitle"></h3>
+            <div class="mt-3">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 text-center" id="modalTitle"></h3>
                 <div class="mt-2 px-7 py-3">
                     <form id="formProducto" class="text-left space-y-4">
                         <input type="hidden" id="productoId">
@@ -121,15 +118,26 @@
         const btnConfirm = document.getElementById('btnConfirm');
         const btnCancelConfirm = document.getElementById('btnCancelConfirm');
         const btnGuardar = document.getElementById('btnGuardar');
-        const nombreUsuarioSpan = document.getElementById('nombreUsuarioSpan');
         const tbody = document.querySelector('tbody');
+
+        // --- FUNCIÓN AUXILIAR DE AUTENTICACIÓN ---
+        function getAuthHeaders(isFormData = false) {
+            const token = localStorage.getItem('supabase_token');
+            const headers = {};
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            if (!isFormData) {
+                headers['Content-Type'] = 'application/json';
+            }
+            return headers;
+        }
 
         // --- FUNCIONES DE UI (NOTIFICACIONES Y MODALES) ---
         const showNotification = (message, type = 'success') => {
             notificationMessage.textContent = message;
             notification.className = 'notification fixed top-5 left-1/2 transform -translate-x-1/2 z-50 p-4 rounded-md shadow-lg text-white max-w-sm';
-            notification.classList.add(type === 'success' ? 'bg-green-500' : 'bg-red-500');
-            notification.classList.add('show');
+            notification.classList.add(type === 'success' ? 'bg-green-500' : 'bg-red-500', 'show');
             setTimeout(() => notification.classList.remove('show'), 3000);
         };
 
@@ -160,10 +168,13 @@
             productoIdInput.value = id;
             modalTitle.textContent = `Editando Producto ID: ${id}`;
             imagenInput.required = false;
-            contenedorImagenesActuales.innerHTML = '<label class="block text-sm font-medium text-gray-700">Imágenes Actuales</label>';
-
+            
             try {
-                const res = await fetch(`${API_BASE_URL}/api/productos/${id}`, { credentials: 'include' });
+                const res = await fetch(`${API_BASE_URL}/api/productos/${id}`, { headers: getAuthHeaders() });
+                if (!res.ok) {
+                    const errorData = await res.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${res.status}`);
+                }
                 const data = await res.json();
                 if (!data.success) throw new Error(data.error);
 
@@ -174,6 +185,7 @@
                 form.stock.value = p.stock;
                 form.categoria.value = p.categoria;
 
+                contenedorImagenesActuales.innerHTML = '<label class="block text-sm font-medium text-gray-700">Imágenes Actuales</label>';
                 if (p.imagenes && p.imagenes.length > 0) {
                     p.imagenes.forEach(img => {
                         const imgContainer = document.createElement('div');
@@ -195,26 +207,24 @@
         };
         
         // --- LÓGICA DE INICIALIZACIÓN DEL PANEL ---
-         const inicializarPanel = async () => {
+        const inicializarPanel = async () => {
             try {
-                // Nuevo Flujo: Verificamos el rol guardado en localStorage
                 const userRole = localStorage.getItem('user_role');
                 const token = localStorage.getItem('supabase_token');
 
                 if (!token || userRole !== 'admin') {
-                    // Si no hay token o el rol no es admin, no tiene acceso.
-                    // Redirigimos al inicio.
                     window.location.href = 'index.html';
-                    return; // Detenemos la ejecución
+                    return;
                 }
-                
-                // Si es admin, procedemos a cargar los productos
-                const prodRes = await fetch(`${API_BASE_URL}/api/productos`, {
-                    headers: getAuthHeaders() // Usamos la función para enviar el token
-                });
+
+                const prodRes = await fetch(`${API_BASE_URL}/api/productos`, { headers: getAuthHeaders() });
+                if (!prodRes.ok) {
+                    const errorData = await prodRes.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${prodRes.status}`);
+                }
                 const productos = await prodRes.json();
                 
-                tbody.innerHTML = ''; // Limpiamos la tabla
+                tbody.innerHTML = '';
                 if (productos.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">No hay productos para mostrar.</td></tr>';
                 } else {
@@ -234,22 +244,14 @@
                     });
                 }
             } catch (error) {
-                // Si el token es inválido, el fetch de productos fallará y caerá aquí.
-                showNotification(`Error al inicializar el panel: ${error.message}. Serás redirigido.`, 'error');
-                setTimeout(() => window.location.href = 'index.html', 2000);
+                showNotification(`Error al cargar datos: ${error.message}. Serás redirigido.`, 'error');
+                setTimeout(() => {
+                    localStorage.removeItem('supabase_token');
+                    localStorage.removeItem('user_role');
+                    window.location.href = 'index.html';
+                }, 2500);
             }
         };
-
-        // --- NO OLVIDES AÑADIR ESTA FUNCIÓN AUXILIAR AL INICIO DEL SCRIPT ---
-        
-        function getAuthHeaders() {
-            const token = localStorage.getItem('supabase_token');
-            if (!token) return { 'Content-Type': 'application/json' };
-            return {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            };
-        }
 
         // --- EVENT LISTENERS ---
         document.getElementById('btnAbrirModalCrear').addEventListener('click', openCreateModal);
@@ -276,56 +278,48 @@
                     categoria: form.categoria.value,
                 };
 
+                // --- Lógica para subir imágenes (común para crear y editar) ---
+                let urlsDeImagenesNuevas = [];
+                if (imagenInput.files.length > 0) {
+                    btnGuardar.textContent = 'Subiendo imágenes...';
+                    const promesas = Array.from(imagenInput.files).map(file => {
+                        const formData = new FormData();
+                        formData.append('file', file);
+                        return fetch(`${API_BASE_URL}/api/upload-image`, { method: 'POST', body: formData, headers: getAuthHeaders(true) }).then(res => res.json());
+                    });
+                    const resultados = await Promise.all(promesas);
+                    urlsDeImagenesNuevas = resultados.map(res => {
+                        if (!res.success) throw new Error(res.error || 'Una imagen falló al subir.');
+                        return res.image_url;
+                    });
+                }
+                
                 if (esModoEdicion) {
-                    if (imagenInput.files.length > 0) {
-                        btnGuardar.textContent = 'Subiendo nuevas imágenes...';
-                        const promesas = Array.from(imagenInput.files).map(file => {
-                            const formData = new FormData();
-                            formData.append('file', file);
-                            return fetch(`${API_BASE_URL}/api/upload-image`, { method: 'POST', body: formData, credentials: 'include' }).then(res => res.json());
-                        });
-                        const resultados = await Promise.all(promesas);
-                        const urls = resultados.map(res => {
-                            if (!res.success) throw new Error(res.error || 'Una imagen falló al subir.');
-                            return res.image_url;
-                        });
+                    // --- MODO EDICIÓN ---
+                    if (urlsDeImagenesNuevas.length > 0) {
                         await fetch(`${API_BASE_URL}/api/productos/${productoId}/imagenes`, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ imagenes_urls: urls }),
-                            credentials: 'include'
+                            headers: getAuthHeaders(),
+                            body: JSON.stringify({ imagenes_urls: urlsDeImagenesNuevas }),
                         });
                     }
-
                     btnGuardar.textContent = 'Actualizando datos...';
                     const res = await fetch(`${API_BASE_URL}/api/productos/${productoId}`, {
                         method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: getAuthHeaders(),
                         body: JSON.stringify(datosProducto),
-                        credentials: 'include'
                     });
                     const data = await res.json();
                     if (!data.success) throw new Error(data.error);
                     showNotification('¡Producto actualizado con éxito!');
                 } else {
-                    btnGuardar.textContent = 'Subiendo imágenes...';
-                    const promesas = Array.from(imagenInput.files).map(file => {
-                        const formData = new FormData();
-                        formData.append('file', file);
-                        return fetch(`${API_BASE_URL}/api/upload-image`, { method: 'POST', body: formData, credentials: 'include' }).then(res => res.json());
-                    });
-                    const resultados = await Promise.all(promesas);
-                    datosProducto.imagenes_urls = resultados.map(res => {
-                        if (!res.success) throw new Error(res.error || 'Una imagen falló.');
-                        return res.image_url;
-                    });
-
+                    // --- MODO CREACIÓN ---
+                    datosProducto.imagenes_urls = urlsDeImagenesNuevas;
                     btnGuardar.textContent = 'Guardando producto...';
                     const res = await fetch(`${API_BASE_URL}/api/productos`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: getAuthHeaders(),
                         body: JSON.stringify(datosProducto),
-                        credentials: 'include'
                     });
                     const data = await res.json();
                     if (!data.success) throw new Error(data.error);
@@ -344,63 +338,38 @@
         });
 
         tbody.addEventListener('click', async (e) => {
+            e.preventDefault();
             const target = e.target.closest('a');
             if (!target) return;
             
             if (target.classList.contains('btn-editar')) {
-                e.preventDefault();
                 openEditModal(target.dataset.id);
             }
 
             if (target.classList.contains('btn-eliminar')) {
-                e.preventDefault();
                 const productoId = target.dataset.id;
                 const productoNombre = target.dataset.nombre;
-                const confirmado = await showConfirmation(`¿Estás seguro de que quieres eliminar "${productoNombre}"?`);
-                if (!confirmado) return;
-
-                function getAuthHeaders() {
-                    const token = localStorage.getItem('supabase_token');
-                    if (!token) return { 'Content-Type': 'application/json' };
-                    return {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    };
-                }
-
+                if (await showConfirmation(`¿Estás seguro de que quieres eliminar "${productoNombre}"?`)) {
                     try {
-                    const res = await fetch(`${API_BASE_URL}/api/productos/${productoId}`, {
-                        method: 'DELETE',
-                        headers: getAuthHeaders() // ¡Este es el cambio crucial!
-                    });
-                    const data = await res.json();
-                    if (!data.success) throw new Error(data.error);
-                    showNotification('¡Producto eliminado!');
-                    setTimeout(() => location.reload(), 1500);
-                } catch (error) {
-                    showNotification(`Error al eliminar: ${error.message}`, 'error');
+                        const res = await fetch(`${API_BASE_URL}/api/productos/${productoId}`, { method: 'DELETE', headers: getAuthHeaders() });
+                        const data = await res.json();
+                        if (!data.success) throw new Error(data.error);
+                        showNotification('¡Producto eliminado!');
+                        setTimeout(() => location.reload(), 1500);
+                    } catch (error) {
+                        showNotification(`Error al eliminar: ${error.message}`, 'error');
+                    }
                 }
             }
         });
         
         contenedorImagenesActuales.addEventListener('click', async (e) => {
-            const boton = e.target.closest('button');
-            if (boton && boton.classList.contains('btn-eliminar-imagen')) {
+            const boton = e.target.closest('button.btn-eliminar-imagen');
+            if (boton) {
                 const imagenId = boton.dataset.imagenId;
                 if (await showConfirmation('¿Seguro que quieres eliminar esta imagen permanentemente?')) {
-                    function getAuthHeaders() {
-                    const token = localStorage.getItem('supabase_token');
-                    if (!token) return { 'Content-Type': 'application/json' };
-                    return {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    };
-                }
                     try {
-                    const res = await fetch(`${API_BASE_URL}/api/productos/${productoId}`, {
-                        method: 'DELETE',
-                        headers: getAuthHeaders() // ¡Este es el cambio crucial!
-                    });
+                        const res = await fetch(`${API_BASE_URL}/api/imagenes/${imagenId}`, { method: 'DELETE', headers: getAuthHeaders() });
                         const data = await res.json();
                         if (!data.success) throw new Error(data.error);
                         
@@ -415,8 +384,9 @@
         
         document.getElementById('btnLogout').addEventListener('click', (e) => {
             e.preventDefault();
-            fetch(`${API_BASE_URL}/logout`, { credentials: 'include' })
-                .then(() => location.href = 'index.html');
+            localStorage.removeItem('supabase_token');
+            localStorage.removeItem('user_role');
+            window.location.href = 'index.html';
         });
 
         // --- INICIALIZACIÓN DEL PANEL ---
