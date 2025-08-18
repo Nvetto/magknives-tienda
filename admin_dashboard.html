@@ -195,22 +195,26 @@
         };
         
         // --- LÓGICA DE INICIALIZACIÓN DEL PANEL ---
-        const inicializarPanel = async () => {
+         const inicializarPanel = async () => {
             try {
-                const authRes = await fetch(`${API_BASE_URL}/api/auth/status`, { credentials: 'include' });
-                const authData = await authRes.json();
-                
-                if (authData.is_authenticated && authData.role === 'admin') {
-                    if (nombreUsuarioSpan) nombreUsuarioSpan.textContent = authData.nombre;
-                } else {
-                    window.location.href = 'index.html';
-                    return;
-                }
+                // Nuevo Flujo: Verificamos el rol guardado en localStorage
+                const userRole = localStorage.getItem('user_role');
+                const token = localStorage.getItem('supabase_token');
 
-                const prodRes = await fetch(`${API_BASE_URL}/api/productos`, { credentials: 'include' });
+                if (!token || userRole !== 'admin') {
+                    // Si no hay token o el rol no es admin, no tiene acceso.
+                    // Redirigimos al inicio.
+                    window.location.href = 'index.html';
+                    return; // Detenemos la ejecución
+                }
+                
+                // Si es admin, procedemos a cargar los productos
+                const prodRes = await fetch(`${API_BASE_URL}/api/productos`, {
+                    headers: getAuthHeaders() // Usamos la función para enviar el token
+                });
                 const productos = await prodRes.json();
                 
-                tbody.innerHTML = '';
+                tbody.innerHTML = ''; // Limpiamos la tabla
                 if (productos.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">No hay productos para mostrar.</td></tr>';
                 } else {
@@ -219,7 +223,7 @@
                         tr.innerHTML = `
                             <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm font-medium text-gray-900">${producto.nombre}</div></td>
                             <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">${producto.categoria}</span></td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">$${producto.precio.toFixed(2)}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">$${parseFloat(producto.precio).toFixed(2)}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-bold ${producto.stock > 0 ? 'text-green-600' : 'text-red-600'}">${producto.stock}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                                 <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-4 btn-editar" data-id="${producto.id}">Editar</a>
@@ -230,9 +234,22 @@
                     });
                 }
             } catch (error) {
-                showNotification(`Error al inicializar el panel: ${error.message}`, 'error');
+                // Si el token es inválido, el fetch de productos fallará y caerá aquí.
+                showNotification(`Error al inicializar el panel: ${error.message}. Serás redirigido.`, 'error');
+                setTimeout(() => window.location.href = 'index.html', 2000);
             }
         };
+
+        // --- NO OLVIDES AÑADIR ESTA FUNCIÓN AUXILIAR AL INICIO DEL SCRIPT ---
+        
+        function getAuthHeaders() {
+            const token = localStorage.getItem('supabase_token');
+            if (!token) return { 'Content-Type': 'application/json' };
+            return {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            };
+        }
 
         // --- EVENT LISTENERS ---
         document.getElementById('btnAbrirModalCrear').addEventListener('click', openCreateModal);
