@@ -13,27 +13,28 @@
 
     }
 
-body {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-}
+    body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
 
-main {
-    flex-grow: 1;
-}
+    main {
+        flex-grow: 1;
+    }
 
     
-.producto {
-  height: 100%;
-}
+    .producto {
+    height: 100%;
+    }
 
-.grid-productos {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem;
-  align-items: stretch; 
-}
+    .grid-productos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    align-items: stretch; 
+    }
+
     body {
         background-color: #f5f5f5;
         }
@@ -111,134 +112,134 @@ main {
     
 
     .btn-whatsapp {
-    position: fixed; /* Mantiene el botón en la misma posición al desplazarse */
-    bottom: 20px; /* Distancia desde la parte inferior de la ventana */
-    right: 20px; /* Distancia desde el lado derecho de la ventana */
-    width: 60px; /* Ancho del botón */
-    height: 60px; /* Alto del botón para hacerlo cuadrado */
-    background-color: #25d366; /* Color de fondo de WhatsApp */
-    color: #FFF; /* Color del ícono */
-    border-radius: 50%; /* Hace que el botón sea circular */
-    text-align: center; /* Centra el contenido */
-    box-shadow: 2px 2px 3px #999; /* Agrega una sombra para un efecto flotante */
-    z-index: 1000; /* Asegura que el botón esté siempre por encima de otros elementos */
-    display: flex; /* Utiliza flexbox para centrar el SVG */
-    align-items: center; /* Alinea verticalmente el ícono */
-    justify-content: center; /* Alinea horizontalmente el ícono */
-    transition: transform 0.3s ease-in-out; /* Suaviza la animación del hover */
-}
-
-.btn-whatsapp:hover {
-    transform: scale(1.1); /* Agranda el botón ligeramente al pasar el mouse */
-}
-
-.btn-whatsapp svg {
-    width: 30px; /* Ancho del SVG del ícono */
-    height: 30px; /* Alto del SVG del ícono */
-    fill: currentColor; /* Usa el color del texto para el SVG */
-}
-
-@media (max-width: 768px) {
-    .btn-whatsapp {
-        bottom: 15px; /* Ajusta la posición en dispositivos móviles */
-        right: 15px; /* Ajusta la posición en dispositivos móviles */
-        width: 50px; /* Reduce el tamaño en dispositivos móviles */
-        height: 50px; /* Reduce el tamaño en dispositivos móviles */
+        position: fixed; /* Mantiene el botón en la misma posición al desplazarse */
+        bottom: 20px; /* Distancia desde la parte inferior de la ventana */
+        right: 20px; /* Distancia desde el lado derecho de la ventana */
+        width: 60px; /* Ancho del botón */
+        height: 60px; /* Alto del botón para hacerlo cuadrado */
+        background-color: #25d366; /* Color de fondo de WhatsApp */
+        color: #FFF; /* Color del ícono */
+        border-radius: 50%; /* Hace que el botón sea circular */
+        text-align: center; /* Centra el contenido */
+        box-shadow: 2px 2px 3px #999; /* Agrega una sombra para un efecto flotante */
+        z-index: 1000; /* Asegura que el botón esté siempre por encima de otros elementos */
+        display: flex; /* Utiliza flexbox para centrar el SVG */
+        align-items: center; /* Alinea verticalmente el ícono */
+        justify-content: center; /* Alinea horizontalmente el ícono */
+        transition: transform 0.3s ease-in-out; /* Suaviza la animación del hover */
     }
-}
 
-/* --- Estilos para el banner de "Sin Stock" --- */
+    .btn-whatsapp:hover {
+        transform: scale(1.1); /* Agranda el botón ligeramente al pasar el mouse */
+    }
 
-/* Hacemos que el contenedor del producto sea el punto de referencia 
-   para posicionar el banner y ocultamos cualquier desborde. */
-.producto {
-    position: relative;
-    overflow: hidden;
-}
+    .btn-whatsapp svg {
+        width: 30px; /* Ancho del SVG del ícono */
+        height: 30px; /* Alto del SVG del ícono */
+        fill: currentColor; /* Usa el color del texto para el SVG */
+    }
 
-/* Estilo de la cinta/banner */
-.sin-stock-banner {
-    position: absolute;
-    top: 12px;
-    right: -45px; /* Lo movemos hacia afuera para que la rotación lo coloque en la esquina */
-    background-color: #ad0b0b; /* Un rojo oscuro (red-800 de Tailwind) */
-    color: rgb(255, 255, 255);
-    padding: 5px 40px; /* El padding horizontal ancho crea la longitud de la cinta */
-    font-size: 12px;
-    font-weight: bold;
-    text-transform: uppercase;
-    text-align: center;
-    transform: rotate(45deg); /* La rotación clave para el efecto diagonal */
-    z-index: 10; /* Asegura que esté por encima de la imagen */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Sombra sutil */
-}
+    @media (max-width: 768px) {
+        .btn-whatsapp {
+            bottom: 15px; /* Ajusta la posición en dispositivos móviles */
+            right: 15px; /* Ajusta la posición en dispositivos móviles */
+            width: 50px; /* Reduce el tamaño en dispositivos móviles */
+            height: 50px; /* Reduce el tamaño en dispositivos móviles */
+        }
+    }
 
-.notification {
-    left: 50%; 
-    transform: translateX(-50%); 
-    
-    transition: opacity 0.3s, transform 0.3s;
-    opacity: 0;
-    pointer-events: none;
-}
-.notification.show {
-    transform: translateX(-50%); 
-    opacity: 1;
-    pointer-events: auto;
-}
+    /* --- Estilos para el banner de "Sin Stock" --- */
 
-/* --- Estilos para Botones Flotantes --- */
+    /* Hacemos que el contenedor del producto sea el punto de referencia 
+    para posicionar el banner y ocultamos cualquier desborde. */
+    .producto {
+        position: relative;
+        overflow: hidden;
+    }
 
-/* Estilos compartidos por ambos botones */
-.btn-whatsapp,
-.btn-instagram {
-    position: fixed;
-    right: 20px;
-    width: 60px;
-    height: 60px;
-    color: #FFF;
-    border-radius: 50%;
-    box-shadow: 2px 2px 3px #999;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.3s ease-in-out;
-}
+    /* Estilo de la cinta/banner */
+    .sin-stock-banner {
+        position: absolute;
+        top: 12px;
+        right: -45px; /* Lo movemos hacia afuera para que la rotación lo coloque en la esquina */
+        background-color: #ad0b0b; /* Un rojo oscuro (red-800 de Tailwind) */
+        color: rgb(255, 255, 255);
+        padding: 5px 40px; /* El padding horizontal ancho crea la longitud de la cinta */
+        font-size: 12px;
+        font-weight: bold;
+        text-transform: uppercase;
+        text-align: center;
+        transform: rotate(45deg); /* La rotación clave para el efecto diagonal */
+        z-index: 10; /* Asegura que esté por encima de la imagen */
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Sombra sutil */
+    }
 
-.btn-whatsapp:hover,
-.btn-instagram:hover {
-    transform: scale(1.1);
-}
+    .notification {
+        left: 50%; 
+        transform: translateX(-50%); 
+        
+        transition: opacity 0.3s, transform 0.3s;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .notification.show {
+        transform: translateX(-50%); 
+        opacity: 1;
+        pointer-events: auto;
+    }
 
-.btn-whatsapp svg,
-.btn-instagram svg {
-    width: 30px;
-    height: 30px;
-    fill: currentColor;
-}
+    /* --- Estilos para Botones Flotantes --- */
 
-/* Botón de Instagram (el de más abajo) */
-.btn-instagram {
-    background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%,#d6249f 60%,#285AEB 90%);
-    bottom: 20px; /* Estará a 20px del borde inferior */
-}
-
-/* Botón de WhatsApp (encima del de Instagram) */
-.btn-whatsapp {
-    background-color: #25d366;
-    /* 20px (margen base) + 60px (altura de Instagram) + 15px (espacio entre botones) */
-    bottom: 95px; 
-}
-
-/* --- AJUSTES PARA MÓVILES --- */
-@media (max-width: 768px) {
+    /* Estilos compartidos por ambos botones */
     .btn-whatsapp,
     .btn-instagram {
-        right: 15px;
-        width: 50px;
-        height: 50px;
+        position: fixed;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        color: #FFF;
+        border-radius: 50%;
+        box-shadow: 2px 2px 3px #999;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.3s ease-in-out;
     }
+
+    .btn-whatsapp:hover,
+    .btn-instagram:hover {
+        transform: scale(1.1);
+    }
+
+    .btn-whatsapp svg,
+    .btn-instagram svg {
+        width: 30px;
+        height: 30px;
+        fill: currentColor;
+    }
+
+    /* Botón de Instagram (el de más abajo) */
+    .btn-instagram {
+        background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%,#d6249f 60%,#285AEB 90%);
+        bottom: 20px; /* Estará a 20px del borde inferior */
+    }
+
+    /* Botón de WhatsApp (encima del de Instagram) */
+    .btn-whatsapp {
+        background-color: #25d366;
+        /* 20px (margen base) + 60px (altura de Instagram) + 15px (espacio entre botones) */
+        bottom: 95px; 
+    }
+
+    /* --- AJUSTES PARA MÓVILES --- */
+    @media (max-width: 768px) {
+        .btn-whatsapp,
+        .btn-instagram {
+            right: 15px;
+            width: 50px;
+            height: 50px;
+        }
 
     /* Botón de Instagram */
     .btn-instagram {
