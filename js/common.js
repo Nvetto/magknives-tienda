@@ -237,6 +237,16 @@ function actualizarEstadoHeader() {
     }
 }
 
+/**
+ * Redirige a la página de catálogo y almacena el término de búsqueda.
+ * @param {string} termino - El texto a buscar.
+ */
+function buscarEnCatalogo(termino) {
+    // Guardamos el término de búsqueda en localStorage para que la página de catálogo pueda leerlo.
+    localStorage.setItem('terminoBusqueda', termino);
+    // Redirigimos al usuario a la página del catálogo.
+    window.location.href = 'catalogo.html';
+}
 
 // =======================================================================
 //  3. INICIALIZACIÓN (EVENT LISTENERS)
@@ -466,6 +476,16 @@ document.addEventListener("DOMContentLoaded", () => {
             e.preventDefault();
             formContainerRegister.classList.add('hidden');
             formContainerLogin.classList.remove('hidden');
+        });
+    }
+
+    const barraBusqueda = document.getElementById("barraBusqueda");
+    if (barraBusqueda) {
+        barraBusqueda.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && barraBusqueda.value.trim() !== '') {
+                e.preventDefault();
+                buscarEnCatalogo(barraBusqueda.value.trim());
+            }
         });
     }
 });

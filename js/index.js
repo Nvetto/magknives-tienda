@@ -32,29 +32,6 @@ function generarEnlaceCotizador(producto) {
     return `personalizar.html?${params.toString()}`;
 }
 
-function configurarBusqueda() {
-    const barraBusqueda = document.getElementById("barraBusqueda");
-    const productos = document.querySelectorAll(".producto");
-    const mensajeSinResultados = document.getElementById("sinResultados");
-
-    if (barraBusqueda && productos.length > 0) {
-        barraBusqueda.addEventListener("input", () => {
-            const texto = barraBusqueda.value.toLowerCase();
-            let productosVisibles = 0;
-            productos.forEach((producto) => {
-                const titulo = producto.querySelector(".titulo-producto")?.textContent.toLowerCase() || "";
-                if (titulo.includes(texto)) {
-                    producto.style.display = "flex";
-                    productosVisibles++;
-                } else {
-                    producto.style.display = "none";
-                }
-            });
-            mensajeSinResultados.classList.toggle("hidden", productosVisibles > 0);
-        });
-    }
-}
-
 function renderizarDisponibles(productos) {
     window.productosDB = productos; // Guardar productos para referencia global
     const contenedorPrincipal = document.getElementById("disponiblesCompleto");
@@ -133,7 +110,6 @@ document.addEventListener("DOMContentLoaded", () => {
             .then(response => response.json())
             .then(productos => {
                 renderizarDisponibles(productos);
-                configurarBusqueda();
             })
             .catch(error => {
                 console.error('Error al cargar los productos:', error);
