@@ -528,17 +528,36 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // --- NUEVO LISTENER PARA LA BARRA DE BÚSQUEDA ---
-    const barraBusqueda = document.getElementById("barraBusqueda");
-    const contenedorSugerencias = document.getElementById("contenedorSugerencias");
+   const barraBusqueda = document.getElementById("barraBusqueda");
+const contenedorSugerencias = document.getElementById("contenedorSugerencias");
 
+// 1. Lógica de sugerencias (solo si NO estamos en catalogo.html)
+if (window.location.pathname.includes('/catalogo.html') === false) {
     if (barraBusqueda && contenedorSugerencias) {
         barraBusqueda.addEventListener('input', mostrarSugerencias);
-        
-        // Ocultar sugerencias si se hace clic fuera
+
         document.addEventListener('click', (e) => {
             if (!barraBusqueda.contains(e.target) && !contenedorSugerencias.contains(e.target)) {
                 contenedorSugerencias.classList.add('hidden');
             }
         });
     }
+}
+
+// 2. Lógica de redirección con "Enter" (funciona en TODAS las páginas)
+if (barraBusqueda) {
+    barraBusqueda.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && barraBusqueda.value.trim() !== '') {
+            e.preventDefault();
+            // Si ya estamos en el catálogo, no recargamos la página, solo filtramos.
+            if (window.location.pathname.includes('/catalogo.html')) {
+                // La función filtrarYRenderizar ya está escuchando el evento 'input',
+                // pero podemos llamarla explícitamente si queremos forzar el filtro con Enter.
+                // En este caso, la lógica de catalogo.js ya lo maneja.
+            } else {
+                buscarEnCatalogo(barraBusqueda.value.trim());
+            }
+        }
+    });
+}
 });
