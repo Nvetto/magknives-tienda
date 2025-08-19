@@ -77,7 +77,7 @@ function mostrarSugerencias() {
         contenedor.innerHTML = sugerencias.map(prod => `
             <a href="producto.html?id=${prod.id}" class="flex items-center p-2 hover:bg-gray-100 border-b">
                 <img src="${prod.imagenes[0]}" alt="${prod.nombre}" class="w-10 h-10 object-cover mr-3">
-                <span class="font-semibold">${prod.nombre}</span>
+                <span class="font-semibold sugerencia-texto">${prod.nombre}</span>
             </a>
         `).join('');
         contenedor.classList.remove('hidden');
