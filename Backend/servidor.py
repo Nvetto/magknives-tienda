@@ -130,7 +130,6 @@ def obtener_productos():
     return jsonify(lista_productos)
 
 @app.route('/api/productos/<int:producto_id>', methods=['GET'])
-@admin_required
 def obtener_producto(producto_id):
     """Endpoint protegido para obtener un solo producto por su ID."""
     try:

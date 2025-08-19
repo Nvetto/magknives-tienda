@@ -80,7 +80,7 @@ function renderizarCatalogo(productos) {
 
         productosPorCategoria[categoria].forEach(prod => {
             const productoDiv = document.createElement('div');
-            productoDiv.className = 'producto bg-white shadow-lg rounded p-4';
+            productoDiv.className = 'producto bg-white shadow-lg rounded p-4 flex flex-col justify-between';
 
             const botonHTML = prod.stock > 0
                 ? `<button data-nombre-producto="${prod.nombre}" class="add-to-cart-btn bg-blue-600 text-white px-3 py-2 rounded mt-4 hover:bg-blue-700 w-full">Agregar al carrito</button>`
@@ -88,35 +88,34 @@ function renderizarCatalogo(productos) {
 
             const carruselHTML = prod.imagenes.slice(0, 4).map(imgSrc => `<li><img src="${imgSrc}" alt="${prod.nombre}"></li>`).join('');
 
-            // La estructura interior contiene el layout flex ---
+            // --- INICIO DEL CAMBIO ---
             productoDiv.innerHTML = `
-                ${prod.stock === 0 ? '<div class="sin-stock-banner">Sin Stock</div>' : ''}
-                <div class="h-full flex flex-col justify-between">
-                    <div>
+                <div>
+                    <a href="producto.html?id=${prod.id}" class="cursor-pointer">
+                        ${prod.stock === 0 ? '<div class="sin-stock-banner">Sin Stock</div>' : ''}
                         <div class="slider-box rounded mb-4">
                             <ul>${carruselHTML}</ul>
                         </div>
-                        <h3 class="titulo-producto text-lg font-semibold">${prod.nombre}</h3>
-                        <p class="text-sm text-gray-600 my-2">${prod.descripcion}</p>
-                        ${prod.stock > 0 ? `
-                            <p class="text-xl font-bold text-green-600">$${prod.precio.toLocaleString()}</p>
-                            <p class="text-sm text-gray-500">Stock: ${prod.stock}</p>
-                        ` : `
-                            <p class="text-xl font-bold invisible">&nbsp;</p>
-                            <p class="text-sm invisible">&nbsp;</p>
-                        `}
-                    </div>
-                    ${botonHTML}
+                        <h3 class="titulo-producto text-lg font-semibold hover:text-blue-600 transition-colors">${prod.nombre}</h3>
+                    </a>
+                    <p class="descripcion text-sm text-gray-600 my-2">${prod.descripcion}</p>
+                    ${prod.stock > 0 ? `
+                        <p class="text-xl font-bold text-green-600">$${prod.precio.toLocaleString()}</p>
+                        <p class="text-sm text-gray-500">Stock: ${prod.stock}</p>
+                    ` : `
+                        <p class="text-xl font-bold invisible">&nbsp;</p>
+                        <p class="text-sm invisible">&nbsp;</p>
+                    `}
                 </div>
+                ${botonHTML}
             `;
+            // --- FIN DEL CAMBIO ---
             grid.appendChild(productoDiv);
         });
 
         divCategoria.appendChild(grid);
         contenedorPrincipal.appendChild(divCategoria);
     }
-
-
 
     document.querySelectorAll('.add-to-cart-btn').forEach(button => {
         button.addEventListener('click', () => {

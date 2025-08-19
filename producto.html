@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Detalle del Producto - Magknives</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles/style.css">
+</head>
+<body class="bg-gray-200">
+    <header class="bg-black text-white p-4 flex justify-between items-center">
+        <a href="index.html"><img src="Imagenes/Logo.jpg" alt="Logo" class="h-10"></a>
+        <div class="space-x-4 flex items-center">
+            <button id="abrirCarrito" class="relative px-3 py-2">
+                <span>Mi carrito</span>
+                <span id="contadorCarrito" class="absolute -top-2 -right-2 bg-yellow-500 text-black text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden"></span>
+            </button>
+            <button id="abrirLogin" class="px-3 py-2">Login</button>
+            <a href="admin_dashboard.html" id="btnPanelAdmin" class="px-3 py-2 bg-yellow-600 text-white rounded font-bold hidden">Panel Admin</a>
+            <a href="#" id="btnCerrarSesion" class="px-3 py-2 hidden">Cerrar Sesión</a>
+        </div>
+    </header>
+
+    <nav class="bg-gray-900 text-white p-3 flex justify-center flex-wrap">
+        <a href="index.html" class="mx-2">Inicio</a>
+        <a href="catalogo.html" class="mx-2">Catalogo</a>
+        <a href="#" id="btnContacto" class="mx-2">Contacto</a>
+        <a href="personalizar.html" class="mx-2">Diseña tu pieza personalizada</a>
+    </nav>
+
+    <main class="container mx-auto px-4 py-8">
+        <div id="detalle-producto-contenedor" class="bg-white p-8 rounded-lg shadow-lg max-w-4xl mx-auto">
+            <p class="text-center text-gray-500">Cargando detalles del producto...</p>
+        </div>
+    </main>
+
+    <div id="modalCarrito" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"></div>
+    <div id="modalLogin" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"></div>
+    <div id="mensajeAgregado" class="hidden fixed top-8 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded shadow-lg z-50">¡Agregado con éxito!</div>
+    <div id="mensajeSinStock" class="hidden fixed top-32 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-6 py-3 rounded shadow-lg z-50">No hay suficiente stock.</div>
+
+    <footer class="bg-black text-white p-4 text-center mt-8">
+        &copy; 2025 Tienda de Cuchillos Mags Knives. Todos los derechos reservados.
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/producto.js"></script>
+</body>
+</html>
