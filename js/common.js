@@ -1,3 +1,5 @@
+let todosLosProductos = []; 
+
 // =======================================================================
 //  NUEVO: FUNCIONES AUXILIARES PARA AUTENTICACIÓN (JWT)
 // =======================================================================
@@ -11,6 +13,7 @@ function guardarSesion(token, role) {
     localStorage.setItem('supabase_token', token);
     localStorage.setItem('user_role', role);
 }
+
 
 /**
  * Obtiene el token de autenticación del localStorage.
@@ -42,6 +45,48 @@ function getAuthHeaders() {
     }
     return headers;
 }
+
+/*Carga todos los productos de la API y los almacena en la variable global.*/
+function precargarProductos() {
+    fetch(`${API_BASE_URL}/api/productos`)
+        .then(res => res.json())
+        .then(data => {
+            todosLosProductos = data;
+        })
+        .catch(error => console.error("Error al precargar productos para la búsqueda:", error));
+}
+
+/*Muestra las sugerencias de búsqueda basadas en el texto introducido.*/
+function mostrarSugerencias() {
+    const barraBusqueda = document.getElementById("barraBusqueda");
+    const contenedor = document.getElementById("contenedorSugerencias");
+    const texto = barraBusqueda.value.toLowerCase().trim();
+
+    if (texto.length < 2) { // Mostramos sugerencias a partir de 2 caracteres
+        contenedor.innerHTML = '';
+        contenedor.classList.add('hidden');
+        return;
+    }
+
+    const sugerencias = todosLosProductos.filter(prod => 
+        prod.nombre.toLowerCase().includes(texto) ||
+        prod.descripcion.toLowerCase().includes(texto)
+    ).slice(0, 5); // Limitamos a 5 sugerencias
+
+    if (sugerencias.length > 0) {
+        contenedor.innerHTML = sugerencias.map(prod => `
+            <a href="producto.html?id=${prod.id}" class="flex items-center p-2 hover:bg-gray-100 border-b">
+                <img src="${prod.imagenes[0]}" alt="${prod.nombre}" class="w-10 h-10 object-cover mr-3">
+                <span class="font-semibold">${prod.nombre}</span>
+            </a>
+        `).join('');
+        contenedor.classList.remove('hidden');
+    } else {
+        contenedor.innerHTML = '<div class="p-2 text-gray-500">No se encontraron resultados.</div>';
+        contenedor.classList.remove('hidden');
+    }
+}
+
 
 // =======================================================================
 //  1. FUNCIONES DE UI (MENSAJES) - SIN CAMBIOS
@@ -254,6 +299,7 @@ function buscarEnCatalogo(termino) {
 
 document.addEventListener("DOMContentLoaded", () => {
     // Carga inicial del estado del header y del carrito
+    precargarProductos();
     actualizarEstadoHeader();
     cargarCarrito();
 
@@ -365,6 +411,8 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         });
     }
+
+    
 
     // --- LÓGICA DE FINALIZAR COMPRA POR WHATSAPP - SIN CAMBIOS ---
     const btnFinalizar = document.getElementById('btnFinalizarWhatsapp');
@@ -479,12 +527,17 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // --- NUEVO LISTENER PARA LA BARRA DE BÚSQUEDA ---
     const barraBusqueda = document.getElementById("barraBusqueda");
-    if (barraBusqueda) {
-        barraBusqueda.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && barraBusqueda.value.trim() !== '') {
-                e.preventDefault();
-                buscarEnCatalogo(barraBusqueda.value.trim());
+    const contenedorSugerencias = document.getElementById("contenedorSugerencias");
+
+    if (barraBusqueda && contenedorSugerencias) {
+        barraBusqueda.addEventListener('input', mostrarSugerencias);
+        
+        // Ocultar sugerencias si se hace clic fuera
+        document.addEventListener('click', (e) => {
+            if (!barraBusqueda.contains(e.target) && !contenedorSugerencias.contains(e.target)) {
+                contenedorSugerencias.classList.add('hidden');
             }
         });
     }
