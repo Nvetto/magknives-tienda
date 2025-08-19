@@ -55,12 +55,19 @@ function renderizarDetalle(producto) {
 
     // Añadimos el event listener al botón si existe
     const btnAgregar = document.getElementById('btnAgregar');
-    if (btnAgregar) {
-        btnAgregar.addEventListener('click', () => {
-            if (productoActual) {
-                agregarAlCarrito(productoActual);
-            }
-        });
+if (btnAgregar) {
+    btnAgregar.addEventListener('click', () => {
+        if (productoActual) {
+            // Creamos una copia del producto para no modificar el original
+            const productoParaCarrito = { ...productoActual };
+
+            // Convertimos el array de objetos de imágenes a un simple array de URLs
+            productoParaCarrito.imagenes = productoActual.imagenes.map(img => img.url);
+
+            // Ahora sí, lo pasamos al carrito con el formato correcto
+            agregarAlCarrito(productoParaCarrito);
+        }
+    });
     }
 }
 
