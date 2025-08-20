@@ -33,7 +33,6 @@ function renderizarDetalle(producto) {
                     ${galeriaHTML}
                 </div>
             </div>
-
             <div>
                 <h1 class="text-4xl font-bold mb-4">${producto.nombre}</h1>
                 <p class="text-gray-600 mb-6">${producto.descripcion}</p>
@@ -42,10 +41,17 @@ function renderizarDetalle(producto) {
                     <p class="text-3xl font-bold text-green-600 mb-2">$${producto.precio.toLocaleString()}</p>
                     <p class="text-sm text-gray-500">Stock disponible: ${producto.stock}</p>
                 ` : `
-                    <div class="p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-lg">
-                        <p class="font-bold">Producto sin stock</p>
-                        <p>Este cuchillo fue un trabajo personalizado. ¡Podemos crear uno similar para ti!</p>
-                    </div>
+                    ${producto.categoria === 'personalizados' ? `
+                        <div class="p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-lg">
+                            <p class="font-bold">Producto sin stock</p>
+                            <p>Este cuchillo fue un trabajo personalizado. ¡Podemos crear uno similar para ti!</p>
+                        </div>
+                    ` : `
+                        <div class="p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-lg">
+                            <p class="font-bold">Producto sin stock</p>
+                            <p>Actualmente no contamos con stock de esta pieza, cotiza el tuyo a pedido.</p>
+                        </div>
+                    `}
                 `}
 
                 ${botonHTML}
