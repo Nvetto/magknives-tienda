@@ -1,10 +1,93 @@
-// Variable global para almacenar el producto actual y usarlo en el carrito
+// =======================================================================
+// LÓGICA DEL MODAL DE CONTACTO PARA PRODUCTO.HTML
+// =======================================================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Elementos del modal de contacto
+    const modalContacto = document.getElementById('modalContacto');
+    const btnContacto = document.getElementById('btnContacto');
+    const cerrarContacto = document.getElementById('cerrarContacto');
+    const cancelarContacto = document.getElementById('cancelarContacto');
+    const formContacto = document.getElementById('formContacto');
+
+    // Abrir modal de contacto
+    if (btnContacto) {
+        btnContacto.addEventListener('click', (e) => {
+            e.preventDefault();
+            modalContacto.classList.remove('hidden');
+        });
+    }
+
+    // Cerrar modal de contacto - Botón X
+    if (cerrarContacto) {
+        cerrarContacto.addEventListener('click', () => {
+            modalContacto.classList.add('hidden');
+            formContacto.reset(); // Limpiar formulario
+        });
+    }
+
+    // Cerrar modal de contacto - Botón Cancelar
+    if (cancelarContacto) {
+        cancelarContacto.addEventListener('click', () => {
+            modalContacto.classList.add('hidden');
+            formContacto.reset(); // Limpiar formulario
+        });
+    }
+
+    // Cerrar modal de contacto - Clic fuera
+    if (modalContacto) {
+        modalContacto.addEventListener('click', (e) => {
+            if (e.target === modalContacto) {
+                modalContacto.classList.add('hidden');
+                formContacto.reset(); // Limpiar formulario
+            }
+        });
+    }
+
+    // Cerrar modal de contacto - Tecla ESC
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modalContacto && !modalContacto.classList.contains('hidden')) {
+            modalContacto.classList.add('hidden');
+            formContacto.reset(); // Limpiar formulario
+        }
+    });
+
+    // Procesar formulario de contacto
+    if (formContacto) {
+        formContacto.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(formContacto);
+            const nombre = formData.get('nombre');
+            const email = formData.get('email');
+            const mensaje = formData.get('mensaje');
+
+            // Validación básica
+            if (!nombre || !email || !mensaje) {
+                mostrarMensaje('mensajeContacto', 'Por favor, completa todos los campos.');
+                return;
+            }
+
+            // Aquí podrías enviar el formulario al backend
+            // Por ahora, simulamos el envío exitoso
+            console.log('Datos del formulario de contacto:', { nombre, email, mensaje });
+            
+            // Mostrar mensaje de éxito
+            mostrarMensaje('mensajeContacto', '¡Mensaje enviado con éxito!');
+            
+            // Cerrar modal y limpiar formulario
+            modalContacto.classList.add('hidden');
+            formContacto.reset();
+        });
+    }
+});
+
+// =======================================================================
+// LÓGICA EXISTENTE DEL PRODUCTO
+// =======================================================================
+
 let productoActual = null;
 
-/**
- * Renderiza la vista de detalle del producto en la página.
- * @param {object} producto - El objeto del producto obtenido de la API.
- */
 function renderizarDetalle(producto) {
     const contenedor = document.getElementById('detalle-producto-contenedor');
     if (!contenedor) return;
@@ -108,11 +191,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.success) {
                 renderizarDetalle(data.producto);
             } else {
-                throw new Error(data.error);
+                document.getElementById('detalle-producto-contenedor').innerHTML = '<p class="text-red-500 text-center">Error: No se pudo cargar el producto.</p>';
             }
         })
         .catch(error => {
-            console.error('Error al cargar el producto:', error);
-            document.getElementById('detalle-producto-contenedor').innerHTML = `<p class="text-red-500 text-center">Error al cargar el producto: ${error.message}</p>`;
+            console.error('Error:', error);
+            document.getElementById('detalle-producto-contenedor').innerHTML = '<p class="text-red-500 text-center">Error: No se pudo cargar el producto.</p>';
         });
 });

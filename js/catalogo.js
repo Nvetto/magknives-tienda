@@ -2,14 +2,107 @@ let productosDB = [];
 
 function capitalizarPrimeraLetra(texto) { return texto.charAt(0).toUpperCase() + texto.slice(1); }
 
+// =======================================================================
+// LÓGICA DEL MODAL DE CONTACTO PARA CATALOGO.HTML
+// =======================================================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Elementos del modal de contacto
+    const modalContacto = document.getElementById('modalContacto');
+    const btnContacto = document.getElementById('btnContacto');
+    const cerrarContacto = document.getElementById('cerrarContacto');
+    const cancelarContacto = document.getElementById('cancelarContacto');
+    const formContacto = document.getElementById('formContacto');
+
+    // Abrir modal de contacto
+    if (btnContacto) {
+        btnContacto.addEventListener('click', (e) => {
+            e.preventDefault();
+            modalContacto.classList.remove('hidden');
+        });
+    }
+
+    // Cerrar modal de contacto - Botón X
+    if (cerrarContacto) {
+        cerrarContacto.addEventListener('click', () => {
+            modalContacto.classList.add('hidden');
+            formContacto.reset(); // Limpiar formulario
+        });
+    }
+
+    // Cerrar modal de contacto - Botón Cancelar
+    if (cancelarContacto) {
+        cancelarContacto.addEventListener('click', () => {
+            modalContacto.classList.add('hidden');
+            formContacto.reset(); // Limpiar formulario
+        });
+    }
+
+    // Cerrar modal de contacto - Clic fuera
+    if (modalContacto) {
+        modalContacto.addEventListener('click', (e) => {
+            if (e.target === modalContacto) {
+                modalContacto.classList.add('hidden');
+                formContacto.reset(); // Limpiar formulario
+            }
+        });
+    }
+
+    // Cerrar modal de contacto - Tecla ESC
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modalContacto && !modalContacto.classList.contains('hidden')) {
+            modalContacto.classList.add('hidden');
+            formContacto.reset(); // Limpiar formulario
+        }
+    });
+
+    // Procesar formulario de contacto
+    if (formContacto) {
+        formContacto.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(formContacto);
+            const nombre = formData.get('nombre');
+            const email = formData.get('email');
+            const mensaje = formData.get('mensaje');
+
+            // Validación básica
+            if (!nombre || !email || !mensaje) {
+                mostrarMensaje('mensajeContacto', 'Por favor, completa todos los campos.');
+                return;
+            }
+
+            // Aquí podrías enviar el formulario al backend
+            // Por ahora, simulamos el envío exitoso
+            console.log('Datos del formulario de contacto:', { nombre, email, mensaje });
+            
+            // Mostrar mensaje de éxito
+            mostrarMensaje('mensajeContacto', '¡Mensaje enviado con éxito!');
+            
+            // Cerrar modal y limpiar formulario
+            modalContacto.classList.add('hidden');
+            formContacto.reset();
+        });
+    }
+});
+
+// =======================================================================
+// FUNCIÓN PARA GENERAR ENLACE COTIZADOR (MANTENER LA EXISTENTE)
+// =======================================================================
+
 function generarEnlaceCotizador(producto) {
-    const textoBusqueda = (producto.nombre + ' ' + producto.descripcion).toLowerCase();
     const params = new URLSearchParams();
-    if (textoBusqueda.includes('cazador')) params.set('diseno', 'Cazador');
+    const textoBusqueda = (producto.nombre + ' ' + (producto.descripcion || '')).toLowerCase();
+    
+    // Palabras clave para el Tipo de Diseño
+    if (textoBusqueda.includes('bowie')) params.set('diseno', 'Bowie');
     else if (textoBusqueda.includes('verijero')) params.set('diseno', 'Verijero');
-    else if (textoBusqueda.includes('facón')) params.set('diseno', 'Facón');
-    else if (textoBusqueda.includes('bowie')) params.set('diseno', 'Bowie');
+    else if (textoBusqueda.includes('cazador')) params.set('diseno', 'Cazador');
+    else if (textoBusqueda.includes('facon')) params.set('diseno', 'Facón');
     else if (textoBusqueda.includes('cocina')) params.set('diseno', 'Cocina');
+    else if (textoBusqueda.includes('hachuela')) params.set('diseno', 'Hachuela');
+    
+    // Palabras clave para el Tipo de Acero
     if (textoBusqueda.includes('damasco')) params.set('acero', 'Damasco (Consultar)');
     else if (textoBusqueda.includes('5160')) params.set('acero', '5160');
     else if (textoBusqueda.includes('1095') || textoBusqueda.includes('w1')) params.set('acero', '1095');

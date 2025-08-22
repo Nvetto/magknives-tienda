@@ -23,27 +23,102 @@ document.addEventListener('DOMContentLoaded', () => {
     const contenidoResumen = document.getElementById('contenidoResumen');
     const cerrarResumen = document.getElementById('cerrarResumen');
 
+    // Elementos del modal de contacto
+    const modalContacto = document.getElementById('modalContacto');
+    const btnContacto = document.getElementById('btnContacto');
+    const cerrarContacto = document.getElementById('cerrarContacto');
+    const cancelarContacto = document.getElementById('cancelarContacto');
+    const formContacto = document.getElementById('formContacto');
+
     if (!form) return;
 
-    // Event listener para cerrar el modal
+    // =======================================================================
+    // LÓGICA DEL MODAL DE CONTACTO
+    // =======================================================================
+
+    // Abrir modal de contacto
+    btnContacto.addEventListener('click', (e) => {
+        e.preventDefault();
+        modalContacto.classList.remove('hidden');
+    });
+
+    // Cerrar modal de contacto - Botón X
+    cerrarContacto.addEventListener('click', () => {
+        modalContacto.classList.add('hidden');
+        formContacto.reset(); // Limpiar formulario
+    });
+
+    // Cerrar modal de contacto - Botón Cancelar
+    cancelarContacto.addEventListener('click', () => {
+        modalContacto.classList.add('hidden');
+        formContacto.reset(); // Limpiar formulario
+    });
+
+    // Cerrar modal de contacto - Clic fuera
+    modalContacto.addEventListener('click', (e) => {
+        if (e.target === modalContacto) {
+            modalContacto.classList.add('hidden');
+            formContacto.reset(); // Limpiar formulario
+        }
+    });
+
+    // Cerrar modal de contacto - Tecla ESC
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            if (!modalResumen.classList.contains('hidden')) {
+                modalResumen.classList.add('hidden');
+            }
+            if (!modalContacto.classList.contains('hidden')) {
+                modalContacto.classList.add('hidden');
+                formContacto.reset(); // Limpiar formulario
+            }
+        }
+    });
+
+    // Procesar formulario de contacto
+    formContacto.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(formContacto);
+        const nombre = formData.get('nombre');
+        const email = formData.get('email');
+        const mensaje = formData.get('mensaje');
+
+        // Validación básica
+        if (!nombre || !email || !mensaje) {
+            mostrarMensaje('mensajeContacto', 'Por favor, completa todos los campos.');
+            return;
+        }
+
+        // Aquí podrías enviar el formulario al backend
+        // Por ahora, simulamos el envío exitoso
+        console.log('Datos del formulario de contacto:', { nombre, email, mensaje });
+        
+        // Mostrar mensaje de éxito
+        mostrarMensaje('mensajeContacto', '¡Mensaje enviado con éxito!');
+        
+        // Cerrar modal y limpiar formulario
+        modalContacto.classList.add('hidden');
+        formContacto.reset();
+    });
+
+    // =======================================================================
+    // LÓGICA DEL MODAL DE RESUMEN
+    // =======================================================================
+
+    // Event listener para cerrar el modal de resumen
     cerrarResumen.addEventListener('click', () => {
         modalResumen.classList.add('hidden');
     });
 
-    // Cerrar modal al hacer clic fuera de él
+    // Cerrar modal de resumen al hacer clic fuera de él
     modalResumen.addEventListener('click', (e) => {
         if (e.target === modalResumen) {
             modalResumen.classList.add('hidden');
         }
     });
 
-    // Cerrar modal con ESC
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && !modalResumen.classList.contains('hidden')) {
-            modalResumen.classList.add('hidden');
-        }
-    });
-
+    // Procesar formulario de personalización
     form.addEventListener('submit', (e) => {
         e.preventDefault();
 

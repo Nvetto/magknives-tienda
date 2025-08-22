@@ -453,7 +453,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("cerrarCarrito").addEventListener("click", () => modalCarrito.classList.add("hidden"));
     }
 
-    // Lógica de la Sección de Contacto
+    // Lógica de la Sección de Contacto (solo si existe la sección contacto)
     const btnContacto = document.getElementById("btnContacto");
     const seccionContacto = document.getElementById("contacto");
     if (btnContacto && seccionContacto) {
@@ -470,9 +470,9 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("cerrarLogin").addEventListener("click", () => modalLogin.classList.add("hidden"));
     }
     
-    // Lógica de Envío del Formulario de Contacto
+    // Lógica de Envío del Formulario de Contacto (solo si existe la sección contacto)
     const formContacto = document.querySelector("#contacto form");
-    if (formContacto) {
+    if (formContacto && seccionContacto) {
         formContacto.addEventListener("submit", (e) => {
             e.preventDefault();
             const btnSubmit = formContacto.querySelector("button[type='submit']");
