@@ -112,58 +112,60 @@
   <div id="mensajeContacto" class="hidden fixed top-20 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded shadow-lg z-50">¡Mensaje enviado con éxito!</div>
 
   <!-- Modal Resumen de Cotización -->
-  <div id="modalResumen" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative">
+  <div id="modalResumen" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[95vh] overflow-y-auto relative">
       <!-- Botón cerrar -->
-      <button id="cerrarResumen" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800">
-        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <button id="cerrarResumen" class="absolute top-2 right-2 md:top-4 md:right-4 text-gray-500 hover:text-gray-800 z-10 bg-white rounded-full p-1 shadow-md">
+        <svg class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
       
       <!-- Contenido del resumen -->
-      <div id="contenidoResumen"></div>
+      <div id="contenidoResumen" class="p-4 md:p-8"></div>
     </div>
   </div>
 
   <!-- Modal Contacto -->
-  <div id="modalContacto" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md relative">
+  <div id="modalContacto" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[95vh] overflow-y-auto relative">
       <!-- Botón cerrar -->
-      <button id="cerrarContacto" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800">
-        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <button id="cerrarContacto" class="absolute top-2 right-2 md:top-4 md:right-4 text-gray-500 hover:text-gray-800 z-10 bg-white rounded-full p-1 shadow-md">
+        <svg class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
       
       <!-- Contenido del formulario de contacto -->
-      <div class="text-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">Contacto</h2>
-        <p class="text-gray-600 mt-2">¿Tienes alguna consulta? ¡Escríbenos!</p>
+      <div class="p-4 md:p-8">
+        <div class="text-center mb-6">
+          <h2 class="text-xl md:text-2xl font-bold text-gray-800">Contacto</h2>
+          <p class="text-gray-600 mt-2">¿Tienes alguna consulta? ¡Escríbenos!</p>
+        </div>
+        
+        <form id="formContacto" class="space-y-4">
+          <div>
+            <label for="nombreContacto" class="block text-sm font-medium text-gray-700">Nombre</label>
+            <input type="text" id="nombreContacto" name="nombre" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+          </div>
+          <div>
+            <label for="emailContacto" class="block text-sm font-medium text-gray-700">Email</label>
+            <input type="email" id="emailContacto" name="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+          </div>
+          <div>
+            <label for="mensajeContactoTextarea" class="block text-sm font-medium text-gray-700">Mensaje</label>
+            <textarea id="mensajeContactoTextarea" name="mensaje" rows="4" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required></textarea>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-3 pt-2">
+            <button type="submit" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors font-medium">
+              Enviar Mensaje
+            </button>
+            <button type="button" id="cancelarContacto" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors">
+              Cancelar
+            </button>
+          </div>
+        </form>
       </div>
-      
-      <form id="formContacto" class="space-y-4">
-        <div>
-          <label for="nombreContacto" class="block text-sm font-medium text-gray-700">Nombre</label>
-          <input type="text" id="nombreContacto" name="nombre" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
-        </div>
-        <div>
-          <label for="emailContacto" class="block text-sm font-medium text-gray-700">Email</label>
-          <input type="email" id="emailContacto" name="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
-        </div>
-        <div>
-          <label for="mensajeContactoTextarea" class="block text-sm font-medium text-gray-700">Mensaje</label>
-          <textarea id="mensajeContactoTextarea" name="mensaje" rows="4" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required></textarea>
-        </div>
-        <div class="flex gap-3 pt-2">
-          <button type="submit" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors font-medium">
-            Enviar Mensaje
-          </button>
-          <button type="button" id="cancelarContacto" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors">
-            Cancelar
-          </button>
-        </div>
-      </form>
     </div>
   </div>
 
