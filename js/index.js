@@ -71,16 +71,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Aquí podrías enviar el formulario al backend
-            // Por ahora, simulamos el envío exitoso
-            console.log('Datos del formulario de contacto:', { nombre, email, mensaje });
-            
-            // Mostrar mensaje de éxito
-            mostrarMensaje('mensajeContacto', '¡Mensaje enviado con éxito!');
-            
-            // Cerrar modal y limpiar formulario
-            modalContacto.classList.add('hidden');
-            formContacto.reset();
+            // Enviar formulario al backend
+            fetch(`${API_BASE_URL}/contacto`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre, email, mensaje })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Mostrar mensaje de éxito
+                    mostrarMensaje('mensajeContacto', '¡Mensaje enviado con éxito!');
+                    // Cerrar modal y limpiar formulario
+                    modalContacto.classList.add('hidden');
+                    formContacto.reset();
+                } else {
+                    // Mostrar mensaje de error
+                    mostrarMensaje('mensajeContacto', data.error || 'Error al enviar el mensaje.');
+                }
+            })
+            .catch(error => {
+                console.error('Error al enviar mensaje:', error);
+                mostrarMensaje('mensajeContacto', 'Error de conexión. Inténtalo de nuevo.');
+            });
         });
     }
 });
